@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Containers">
+<meta name="theme-color" content="#1A2B4A">
+<title>Containerregister</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #F1F5F9; min-height: 100vh; padding-bottom: 40px; }
+  
+  header { background: #1A2B4A; padding: 20px 16px 16px; position: sticky; top: 0; z-index: 100; }
+  header h1 { font-size: 20px; font-weight: 800; color: #fff; }
+  header p { font-size: 12px; color: #94A3B8; margin-top: 2px; }
+
+  .main { max-width: 700px; margin: 0 auto; padding: 16px; }
+
+  .summary { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; overflow-x: auto; padding-bottom: 4px; }
+  .summary-card { background: #fff; border: 2px solid #E5E7EB; border-radius: 10px; padding: 8px 12px; min-width: 80px; cursor: pointer; transition: all 0.15s; flex-shrink: 0; }
+  .summary-card.active { border-color: var(--dot); background: var(--bg); }
+  .summary-card .num { font-size: 20px; font-weight: 800; color: var(--dot); }
+  .summary-card .lbl { font-size: 11px; color: #6B7280; font-weight: 600; }
+
+  .toolbar { display: flex; gap: 8px; margin-bottom: 14px; }
+  .toolbar input { flex: 1; border: 1px solid #D1D5DB; border-radius: 8px; padding: 10px 12px; font-size: 14px; outline: none; -webkit-appearance: none; }
+  .btn-add { background: #2563EB; color: #fff; border: none; border-radius: 8px; padding: 10px 16px; font-weight: 700; font-size: 14px; cursor: pointer; white-space: nowrap; }
+
+  .card { background: #fff; border-radius: 12px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.07); overflow: hidden; }
+  .card-body { padding: 14px; }
+  .card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 6px; }
+  .card-title { font-weight: 700; font-size: 15px; color: #1E293B; }
+  .card-actions { display: flex; gap: 6px; flex-shrink: 0; }
+  .btn-edit { background: #EEF2F7; border: none; border-radius: 7px; padding: 5px 12px; font-size: 12px; font-weight: 600; cursor: pointer; color: #374151; }
+  .btn-del { background: #FEE2E2; border: none; border-radius: 7px; padding: 5px 10px; font-size: 12px; font-weight: 600; cursor: pointer; color: #DC2626; }
+
+  .badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 9px; border-radius: 999px; font-size: 11px; font-weight: 600; }
+  .badge .dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+
+  .card-meta { font-size: 13px; color: #64748B; margin-bottom: 6px; }
+  .card-dates { display: flex; gap: 14px; font-size: 12px; color: #6B7280; margin-bottom: 10px; flex-wrap: wrap; }
+  .card-dates b { color: #374151; }
+  .docs { display: flex; gap: 10px; font-size: 12px; color: #6B7280; flex-wrap: wrap; margin-bottom: 8px; }
+  .progress-wrap { max-width: 260px; }
+  .progress-label { font-size: 11px; color: #9CA3AF; margin-bottom: 3px; }
+  .progress-bar { height: 6px; background: #E5E7EB; border-radius: 99px; }
+  .progress-fill { height: 6px; border-radius: 99px; transition: width 0.3s; }
+  .comment { font-size: 12px; color: #374151; background: #F8FAFC; border-radius: 6px; padding: 5px 10px; margin-top: 8px; display: inline-block; }
+
+  /* Form */
+  .form-panel { background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px; padding: 14px; margin-bottom: 14px; }
+  .form-panel h3 { font-weight: 700; font-size: 15px; color: #1E293B; margin-bottom: 12px; }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+  .form-field { display: flex; flex-direction: column; gap: 3px; }
+  .form-field label { font-size: 11px; color: #6B7280; font-weight: 600; }
+  .form-field input, .form-field select { border: 1px solid #D1D5DB; border-radius: 6px; padding: 7px 8px; font-size: 13px; font-family: inherit; outline: none; -webkit-appearance: none; background: #fff; }
+  .form-field.full { grid-column: 1 / -1; }
+  .checks { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 12px; font-size: 13px; }
+  .checks label { display: flex; align-items: center; gap: 5px; cursor: pointer; }
+  .checks input[type=checkbox] { width: 16px; height: 16px; accent-color: #3B82F6; }
+  .form-btns { display: flex; gap: 8px; }
+  .btn-save { background: #1A2B4A; color: #fff; border: none; border-radius: 7px; padding: 9px 20px; font-weight: 700; font-size: 13px; cursor: pointer; }
+  .btn-cancel { background: #E5E7EB; color: #374151; border: none; border-radius: 7px; padding: 9px 16px; font-weight: 700; font-size: 13px; cursor: pointer; }
+
+  .empty { text-align: center; color: #9CA3AF; padding: 40px; background: #fff; border-radius: 12px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>🚢 Containerregister</h1>
+  <p>Spåra containers, dokument och tullstatus</p>
+</header>
+
+<div class="main">
+  <div class="summary" id="summary"></div>
+  <div class="toolbar">
+    <input type="search" id="search" placeholder="Sök leverantör, container-nr, B/L..." oninput="render()">
+    <button class="btn-add" onclick="showAdd()">+ Ny</button>
+  </div>
+  <div id="add-form"></div>
+  <div id="list"></div>
+</div>
+
+<script>
+const STATUS_CFG = {
+  "Bokad":     { bg: "#DBEAFE", text: "#1E40AF", dot: "#3B82F6" },
+  "På väg":    { bg: "#FEF3C7", text: "#92400E", dot: "#F59E0B" },
+  "I hamn":    { bg: "#FFEDD5", text: "#9A3412", dot: "#F97316" },
+  "Förtullad": { bg: "#D1FAE5", text: "#065F46", dot: "#10B981" },
+  "Levererad": { bg: "#F3F4F6", text: "#374151", dot: "#9CA3AF" },
+};
+const STATUSES = Object.keys(STATUS_CFG);
+
+let rows = JSON.parse(localStorage.getItem("containers") || "null") || [
+  { id:1, leverantor:"Huvudleverantören AB", containerNr:"MSCU1234567", bl:"BL-2026-001", etd:"2026-06-01", eta:"2026-07-05", status:"På väg",    invoice:true,  packingList:true,  blDok:true,  tull:false, levererad:false, kommentar:"Väntar på D/O" },
+  { id:2, leverantor:"Annan Leverantör",     containerNr:"CMAU9876543", bl:"BL-2026-002", etd:"2026-06-10", eta:"2026-07-15", status:"Bokad",     invoice:true,  packingList:false, blDok:false, tull:false, levererad:false, kommentar:"Packing list saknas" },
+  { id:3, leverantor:"Huvudleverantören AB", containerNr:"TCKU3344556", bl:"BL-2026-003", etd:"2026-05-20", eta:"2026-06-25", status:"Förtullad", invoice:true,  packingList:true,  blDok:true,  tull:true,  levererad:false, kommentar:"Boka lossning" },
+];
+let filterStatus = "Alla";
+let editId = null;
+let addMode = false;
+let newRow = emptyRow();
+
+function save() { localStorage.setItem("containers", JSON.stringify(rows)); }
+function emptyRow() { return { id: Date.now(), leverantor:"", containerNr:"", bl:"", etd:"", eta:"", status:"Bokad", invoice:false, packingList:false, blDok:false, tull:false, levererad:false, kommentar:"" }; }
+
+function badge(status) {
+  const c = STATUS_CFG[status] || STATUS_CFG["Bokad"];
+  return `<span class="badge" style="background:${c.bg};color:${c.text}"><span class="dot" style="background:${c.dot}"></span>${status}</span>`;
+}
+function chk(v) { return `<span style="color:${v?"#10B981":"#D1D5DB"};font-size:16px">${v?"✓":"✗"}</span>`; }
+function docsDone(r) { return [r.invoice,r.packingList,r.blDok,r.tull].filter(Boolean).length; }
+
+function formHTML(obj, title, saveF, cancelF) {
+  return `<div class="form-panel">
+    <h3>${title}</h3>
+    <div class="form-grid">
+      <div class="form-field full"><label>Leverantör</label><input id="f-lev" value="${obj.leverantor}"></div>
+      <div class="form-field"><label>Container-nr</label><input id="f-cnr" value="${obj.containerNr}"></div>
+      <div class="form-field"><label>B/L-nr</label><input id="f-bl" value="${obj.bl}"></div>
+      <div class="form-field"><label>ETD (avgång)</label><input type="date" id="f-etd" value="${obj.etd}"></div>
+      <div class="form-field"><label>ETA (ankomst)</label><input type="date" id="f-eta" value="${obj.eta}"></div>
+      <div class="form-field full"><label>Status</label><select id="f-status">${STATUSES.map(s=>`<option${s===obj.status?" selected":""}>${s}</option>`).join("")}</select></div>
+      <div class="form-field full"><label>Kommentar</label><input id="f-kom" value="${obj.kommentar}"></div>
+    </div>
+    <div class="checks">
+      <label><input type="checkbox" id="f-inv"${obj.invoice?" checked":""}> Invoice</label>
+      <label><input type="checkbox" id="f-pl"${obj.packingList?" checked":""}> Packing List</label>
+      <label><input type="checkbox" id="f-bld"${obj.blDok?" checked":""}> B/L</label>
+      <label><input type="checkbox" id="f-tull"${obj.tull?" checked":""}> Tull klar</label>
+      <label><input type="checkbox" id="f-lev2"${obj.levererad?" checked":""}> Levererad</label>
+    </div>
+    <div class="form-btns">
+      <button class="btn-save" onclick="${saveF}()">Spara</button>
+      <button class="btn-cancel" onclick="${cancelF}()">Avbryt</button>
+    </div>
+  </div>`;
+}
+
+function readForm() {
+  return {
+    leverantor: document.getElementById("f-lev").value,
+    containerNr: document.getElementById("f-cnr").value,
+    bl: document.getElementById("f-bl").value,
+    etd: document.getElementById("f-etd").value,
+    eta: document.getElementById("f-eta").value,
+    status: document.getElementById("f-status").value,
+    kommentar: document.getElementById("f-kom").value,
+    invoice: document.getElementById("f-inv").checked,
+    packingList: document.getElementById("f-pl").checked,
+    blDok: document.getElementById("f-bld").checked,
+    tull: document.getElementById("f-tull").checked,
+    levererad: document.getElementById("f-lev2").checked,
+  };
+}
+
+function showAdd() { addMode = true; newRow = emptyRow(); render(); }
+function cancelAdd() { addMode = false; render(); }
+function saveAdd() {
+  const d = readForm();
+  rows.push({ ...newRow, ...d });
+  save(); addMode = false; render();
+}
+
+function startEdit(id) { editId = id; render(); }
+function cancelEdit() { editId = null; render(); }
+function saveEdit() {
+  const d = readForm();
+  rows = rows.map(r => r.id === editId ? { ...r, ...d } : r);
+  save(); editId = null; render();
+}
+function deleteRow(id) {
+  if (!confirm("Ta bort denna container?")) return;
+  rows = rows.filter(r => r.id !== id);
+  save(); render();
+}
+function setFilter(s) { filterStatus = filterStatus === s ? "Alla" : s; render(); }
+
+function render() {
+  const q = document.getElementById("search").value.toLowerCase();
+  const filtered = rows.filter(r => {
+    const ms = filterStatus === "Alla" || r.status === filterStatus;
+    const mq = !q || r.leverantor.toLowerCase().includes(q) || r.containerNr.toLowerCase().includes(q) || r.bl.toLowerCase().includes(q);
+    return ms && mq;
+  });
+
+  // Summary
+  const counts = {};
+  STATUSES.forEach(s => counts[s] = rows.filter(r => r.status === s).length);
+  document.getElementById("summary").innerHTML =
+    STATUSES.map(s => {
+      const c = STATUS_CFG[s];
+      const active = filterStatus === s;
+      return `<div class="summary-card${active?" active":""}" style="--dot:${c.dot};--bg:${c.bg}" onclick="setFilter('${s}')">
+        <div class="num">${counts[s]}</div><div class="lbl">${s}</div></div>`;
+    }).join("") +
+    `<div class="summary-card" style="--dot:#1A2B4A;--bg:#EEF2F7">
+      <div class="num" style="color:#1A2B4A">${rows.length}</div><div class="lbl">Totalt</div></div>`;
+
+  // Add form
+  document.getElementById("add-form").innerHTML = addMode
+    ? formHTML(newRow, "Lägg till container", "saveAdd", "cancelAdd") : "";
+
+  // List
+  if (filtered.length === 0) {
+    document.getElementById("list").innerHTML = `<div class="empty">Inga containers matchar sökningen.</div>`;
+    return;
+  }
+  document.getElementById("list").innerHTML = filtered.map(r => {
+    if (r.id === editId) {
+      return `<div class="card"><div class="card-body">${formHTML(r, "Redigera container", "saveEdit", "cancelEdit")}</div></div>`;
+    }
+    const done = docsDone(r);
+    const pct = (done / 4) * 100;
+    const pcolor = done === 4 ? "#10B981" : "#3B82F6";
+    return `<div class="card"><div class="card-body">
+      <div class="card-top">
+        <div>
+          <div class="card-title">${r.containerNr || "–"} ${badge(r.status)}</div>
+        </div>
+        <div class="card-actions">
+          <button class="btn-edit" onclick="startEdit(${r.id})">Redigera</button>
+          <button class="btn-del" onclick="deleteRow(${r.id})">✕</button>
+        </div>
+      </div>
+      <div class="card-meta"><b>${r.leverantor || "–"}</b>${r.bl ? " · B/L: " + r.bl : ""}</div>
+      <div class="card-dates">
+        ${r.etd ? `<span>📤 ETD: <b>${r.etd}</b></span>` : ""}
+        ${r.eta ? `<span>📥 ETA: <b>${r.eta}</b></span>` : ""}
+      </div>
+      <div class="docs">
+        <span>Invoice ${chk(r.invoice)}</span>
+        <span>Packing List ${chk(r.packingList)}</span>
+        <span>B/L ${chk(r.blDok)}</span>
+        <span>Tull ${chk(r.tull)}</span>
+      </div>
+      <div class="progress-wrap">
+        <div class="progress-label">Dokumentstatus ${done}/4</div>
+        <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${pcolor}"></div></div>
+      </div>
+      ${r.kommentar ? `<div class="comment">💬 ${r.kommentar}</div>` : ""}
+    </div></div>`;
+  }).join("");
+}
+
+render();
+</script>
+</body>
+</html>
