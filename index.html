@@ -8,82 +8,110 @@
 <meta name="apple-mobile-web-app-title" content="Containers">
 <meta name="theme-color" content="#1A2B4A">
 <title>Containerregister</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Supabase/2.39.3/umd/supabase.min.js"></script>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #F1F5F9; min-height: 100vh; padding-bottom: 40px; }
-  
-  header { background: #1A2B4A; padding: 20px 16px 16px; position: sticky; top: 0; z-index: 100; }
-  header h1 { font-size: 20px; font-weight: 800; color: #fff; }
-  header p { font-size: 12px; color: #94A3B8; margin-top: 2px; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #F1F5F9; min-height: 100vh; padding-bottom: 60px; }
 
-  .main { max-width: 700px; margin: 0 auto; padding: 16px; }
+header { background: #1A2B4A; padding: 20px 16px 16px; position: sticky; top: 0; z-index: 100; }
+header h1 { font-size: 20px; font-weight: 800; color: #fff; }
+header p { font-size: 12px; color: #94A3B8; margin-top: 2px; }
 
-  .summary { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; overflow-x: auto; padding-bottom: 4px; }
-  .summary-card { background: #fff; border: 2px solid #E5E7EB; border-radius: 10px; padding: 8px 12px; min-width: 80px; cursor: pointer; transition: all 0.15s; flex-shrink: 0; }
-  .summary-card.active { border-color: var(--dot); background: var(--bg); }
-  .summary-card .num { font-size: 20px; font-weight: 800; color: var(--dot); }
-  .summary-card .lbl { font-size: 11px; color: #6B7280; font-weight: 600; }
+.main { max-width: 700px; margin: 0 auto; padding: 16px; }
 
-  .toolbar { display: flex; gap: 8px; margin-bottom: 14px; }
-  .toolbar input { flex: 1; border: 1px solid #D1D5DB; border-radius: 8px; padding: 10px 12px; font-size: 14px; outline: none; -webkit-appearance: none; }
-  .btn-add { background: #2563EB; color: #fff; border: none; border-radius: 8px; padding: 10px 16px; font-weight: 700; font-size: 14px; cursor: pointer; white-space: nowrap; }
+/* Login */
+.login-wrap { max-width: 360px; margin: 60px auto; background: #fff; border-radius: 14px; padding: 28px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); }
+.login-wrap h2 { font-size: 18px; font-weight: 700; color: #1A2B4A; margin-bottom: 6px; }
+.login-wrap p { font-size: 13px; color: #6B7280; margin-bottom: 20px; }
+.login-field { display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; }
+.login-field label { font-size: 11px; color: #6B7280; font-weight: 600; }
+.login-field input { border: 1px solid #D1D5DB; border-radius: 8px; padding: 10px 12px; font-size: 14px; outline: none; font-family: inherit; }
+.btn-login { width: 100%; background: #1A2B4A; color: #fff; border: none; border-radius: 8px; padding: 12px; font-weight: 700; font-size: 14px; cursor: pointer; margin-top: 4px; }
+.btn-link { background: none; border: none; color: #2563EB; font-size: 13px; cursor: pointer; text-decoration: underline; margin-top: 12px; display: block; text-align: center; font-family: inherit; }
+.error-msg { background: #FEE2E2; color: #DC2626; border-radius: 7px; padding: 8px 12px; font-size: 13px; margin-top: 10px; }
+.success-msg { background: #D1FAE5; color: #065F46; border-radius: 7px; padding: 8px 12px; font-size: 13px; margin-top: 10px; }
 
-  .card { background: #fff; border-radius: 12px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.07); overflow: hidden; }
-  .card-body { padding: 14px; }
-  .card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 6px; }
-  .card-title { font-weight: 700; font-size: 15px; color: #1E293B; }
-  .card-actions { display: flex; gap: 6px; flex-shrink: 0; }
-  .btn-edit { background: #EEF2F7; border: none; border-radius: 7px; padding: 5px 12px; font-size: 12px; font-weight: 600; cursor: pointer; color: #374151; }
-  .btn-del { background: #FEE2E2; border: none; border-radius: 7px; padding: 5px 10px; font-size: 12px; font-weight: 600; cursor: pointer; color: #DC2626; }
+/* Top bar */
+.topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+.user-info { font-size: 12px; color: #6B7280; }
+.btn-logout { background: none; border: 1px solid #D1D5DB; border-radius: 7px; padding: 5px 12px; font-size: 12px; cursor: pointer; color: #374151; font-family: inherit; }
 
-  .badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 9px; border-radius: 999px; font-size: 11px; font-weight: 600; }
-  .badge .dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+.summary { display: flex; gap: 8px; flex-wrap: nowrap; margin-bottom: 16px; overflow-x: auto; padding-bottom: 4px; }
+.summary-card { background: #fff; border: 2px solid #E5E7EB; border-radius: 10px; padding: 8px 12px; min-width: 80px; cursor: pointer; transition: all 0.15s; flex-shrink: 0; }
+.summary-card.active { border-color: var(--dot); background: var(--bg); }
+.summary-card .num { font-size: 20px; font-weight: 800; color: var(--dot); }
+.summary-card .lbl { font-size: 11px; color: #6B7280; font-weight: 600; }
 
-  .card-meta { font-size: 13px; color: #64748B; margin-bottom: 6px; }
-  .card-dates { display: flex; gap: 14px; font-size: 12px; color: #6B7280; margin-bottom: 10px; flex-wrap: wrap; }
-  .card-dates b { color: #374151; }
-  .docs { display: flex; gap: 10px; font-size: 12px; color: #6B7280; flex-wrap: wrap; margin-bottom: 8px; }
-  .progress-wrap { max-width: 260px; }
-  .progress-label { font-size: 11px; color: #9CA3AF; margin-bottom: 3px; }
-  .progress-bar { height: 6px; background: #E5E7EB; border-radius: 99px; }
-  .progress-fill { height: 6px; border-radius: 99px; transition: width 0.3s; }
-  .comment { font-size: 12px; color: #374151; background: #F8FAFC; border-radius: 6px; padding: 5px 10px; margin-top: 8px; display: inline-block; }
+.toolbar { display: flex; gap: 8px; margin-bottom: 14px; }
+.toolbar input { flex: 1; border: 1px solid #D1D5DB; border-radius: 8px; padding: 10px 12px; font-size: 14px; outline: none; -webkit-appearance: none; font-family: inherit; }
+.btn-add { background: #2563EB; color: #fff; border: none; border-radius: 8px; padding: 10px 16px; font-weight: 700; font-size: 14px; cursor: pointer; white-space: nowrap; }
 
-  /* Form */
-  .form-panel { background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px; padding: 14px; margin-bottom: 14px; }
-  .form-panel h3 { font-weight: 700; font-size: 15px; color: #1E293B; margin-bottom: 12px; }
-  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
-  .form-field { display: flex; flex-direction: column; gap: 3px; }
-  .form-field label { font-size: 11px; color: #6B7280; font-weight: 600; }
-  .form-field input, .form-field select { border: 1px solid #D1D5DB; border-radius: 6px; padding: 7px 8px; font-size: 13px; font-family: inherit; outline: none; -webkit-appearance: none; background: #fff; }
-  .form-field.full { grid-column: 1 / -1; }
-  .checks { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 12px; font-size: 13px; }
-  .checks label { display: flex; align-items: center; gap: 5px; cursor: pointer; }
-  .checks input[type=checkbox] { width: 16px; height: 16px; accent-color: #3B82F6; }
-  .form-btns { display: flex; gap: 8px; }
-  .btn-save { background: #1A2B4A; color: #fff; border: none; border-radius: 7px; padding: 9px 20px; font-weight: 700; font-size: 13px; cursor: pointer; }
-  .btn-cancel { background: #E5E7EB; color: #374151; border: none; border-radius: 7px; padding: 9px 16px; font-weight: 700; font-size: 13px; cursor: pointer; }
+.card { background: #fff; border-radius: 12px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.07); overflow: hidden; }
+.card-body { padding: 14px; }
+.card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 6px; }
+.card-title { font-weight: 700; font-size: 15px; color: #1E293B; }
+.card-actions { display: flex; gap: 6px; flex-shrink: 0; }
+.btn-edit { background: #EEF2F7; border: none; border-radius: 7px; padding: 5px 12px; font-size: 12px; font-weight: 600; cursor: pointer; color: #374151; font-family: inherit; }
+.btn-del { background: #FEE2E2; border: none; border-radius: 7px; padding: 5px 10px; font-size: 12px; font-weight: 600; cursor: pointer; color: #DC2626; font-family: inherit; }
 
-  .empty { text-align: center; color: #9CA3AF; padding: 40px; background: #fff; border-radius: 12px; }
+.badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 9px; border-radius: 999px; font-size: 11px; font-weight: 600; }
+.badge .dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+
+.card-meta { font-size: 13px; color: #64748B; margin-bottom: 6px; }
+.card-dates { display: flex; gap: 14px; font-size: 12px; color: #6B7280; margin-bottom: 10px; flex-wrap: wrap; }
+.card-dates b { color: #374151; }
+.docs { display: flex; gap: 10px; font-size: 12px; color: #6B7280; flex-wrap: wrap; margin-bottom: 8px; }
+.progress-wrap { max-width: 260px; margin-bottom: 8px; }
+.progress-label { font-size: 11px; color: #9CA3AF; margin-bottom: 3px; }
+.progress-bar { height: 6px; background: #E5E7EB; border-radius: 99px; }
+.progress-fill { height: 6px; border-radius: 99px; transition: width 0.3s; }
+.comment { font-size: 12px; color: #374151; background: #F8FAFC; border-radius: 6px; padding: 5px 10px; margin-top: 6px; display: inline-block; }
+
+/* Files section */
+.files-section { margin-top: 10px; border-top: 1px solid #F1F5F9; padding-top: 10px; }
+.files-title { font-size: 11px; color: #6B7280; font-weight: 600; margin-bottom: 6px; }
+.file-list { display: flex; flex-direction: column; gap: 5px; margin-bottom: 8px; }
+.file-item { display: flex; align-items: center; justify-content: space-between; background: #F8FAFC; border-radius: 7px; padding: 6px 10px; font-size: 12px; }
+.file-item a { color: #2563EB; text-decoration: none; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 200px; }
+.btn-upload { background: #EEF2F7; border: none; border-radius: 7px; padding: 6px 12px; font-size: 12px; font-weight: 600; cursor: pointer; color: #374151; font-family: inherit; }
+.upload-input { display: none; }
+
+/* Form */
+.form-panel { background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px; padding: 14px; margin-bottom: 14px; }
+.form-panel h3 { font-weight: 700; font-size: 15px; color: #1E293B; margin-bottom: 12px; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+.form-field { display: flex; flex-direction: column; gap: 3px; }
+.form-field label { font-size: 11px; color: #6B7280; font-weight: 600; }
+.form-field input, .form-field select { border: 1px solid #D1D5DB; border-radius: 6px; padding: 7px 8px; font-size: 13px; font-family: inherit; outline: none; -webkit-appearance: none; background: #fff; }
+.form-field.full { grid-column: 1 / -1; }
+.checks { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 12px; font-size: 13px; }
+.checks label { display: flex; align-items: center; gap: 5px; cursor: pointer; }
+.checks input[type=checkbox] { width: 16px; height: 16px; accent-color: #3B82F6; }
+.form-btns { display: flex; gap: 8px; }
+.btn-save { background: #1A2B4A; color: #fff; border: none; border-radius: 7px; padding: 9px 20px; font-weight: 700; font-size: 13px; cursor: pointer; font-family: inherit; }
+.btn-cancel { background: #E5E7EB; color: #374151; border: none; border-radius: 7px; padding: 9px 16px; font-weight: 700; font-size: 13px; cursor: pointer; font-family: inherit; }
+
+.loading { text-align: center; color: #9CA3AF; padding: 40px; }
+.empty { text-align: center; color: #9CA3AF; padding: 40px; background: #fff; border-radius: 12px; }
+.spinner { display: inline-block; width: 20px; height: 20px; border: 2px solid #E5E7EB; border-top-color: #2563EB; border-radius: 50%; animation: spin 0.6s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
 </style>
 </head>
 <body>
 <header>
   <h1>🚢 Containerregister</h1>
-  <p>Spåra containers, dokument och tullstatus</p>
+  <p>Spåra containers, dokument och filer</p>
 </header>
 
-<div class="main">
-  <div class="summary" id="summary"></div>
-  <div class="toolbar">
-    <input type="search" id="search" placeholder="Sök leverantör, container-nr, B/L..." oninput="render()">
-    <button class="btn-add" onclick="showAdd()">+ Ny</button>
-  </div>
-  <div id="add-form"></div>
-  <div id="list"></div>
+<div class="main" id="app">
+  <div class="loading"><div class="spinner"></div></div>
 </div>
 
 <script>
+const SUPABASE_URL = "https://bteartmrxbznoewfoajn.supabase.co";
+const SUPABASE_KEY = "sb_publishable_2JrtnRPJUE-yrlSybGkdhA_F6mZ5PvK";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
 const STATUS_CFG = {
   "Bokad":     { bg: "#DBEAFE", text: "#1E40AF", dot: "#3B82F6" },
   "På väg":    { bg: "#FEF3C7", text: "#92400E", dot: "#F59E0B" },
@@ -93,42 +121,146 @@ const STATUS_CFG = {
 };
 const STATUSES = Object.keys(STATUS_CFG);
 
-let rows = JSON.parse(localStorage.getItem("containers") || "null") || [
-  { id:1, leverantor:"Huvudleverantören AB", containerNr:"MSCU1234567", bl:"BL-2026-001", etd:"2026-06-01", eta:"2026-07-05", status:"På väg",    invoice:true,  packingList:true,  blDok:true,  tull:false, levererad:false, kommentar:"Väntar på D/O" },
-  { id:2, leverantor:"Annan Leverantör",     containerNr:"CMAU9876543", bl:"BL-2026-002", etd:"2026-06-10", eta:"2026-07-15", status:"Bokad",     invoice:true,  packingList:false, blDok:false, tull:false, levererad:false, kommentar:"Packing list saknas" },
-  { id:3, leverantor:"Huvudleverantören AB", containerNr:"TCKU3344556", bl:"BL-2026-003", etd:"2026-05-20", eta:"2026-06-25", status:"Förtullad", invoice:true,  packingList:true,  blDok:true,  tull:true,  levererad:false, kommentar:"Boka lossning" },
-];
+let currentUser = null;
+let rows = [];
+let files = {}; // containerId -> [files]
 let filterStatus = "Alla";
 let editId = null;
 let addMode = false;
-let newRow = emptyRow();
+let loginMode = "login"; // login | register
 
-function save() { localStorage.setItem("containers", JSON.stringify(rows)); }
-function emptyRow() { return { id: Date.now(), leverantor:"", containerNr:"", bl:"", etd:"", eta:"", status:"Bokad", invoice:false, packingList:false, blDok:false, tull:false, levererad:false, kommentar:"" }; }
+const app = document.getElementById("app");
 
+// ---- AUTH ----
+async function init() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) { currentUser = session.user; showApp(); }
+  else showLogin();
+}
+
+function showLogin() {
+  app.innerHTML = `
+    <div class="login-wrap">
+      <h2>${loginMode === "login" ? "Logga in" : "Skapa konto"}</h2>
+      <p>Containerregister – säker åtkomst för ditt team</p>
+      <div class="login-field"><label>E-POST</label><input id="l-email" type="email" placeholder="din@email.com"></div>
+      <div class="login-field"><label>LÖSENORD</label><input id="l-pass" type="password" placeholder="••••••••"></div>
+      <button class="btn-login" onclick="doAuth()">${loginMode === "login" ? "Logga in" : "Skapa konto"}</button>
+      <button class="btn-link" onclick="toggleMode()">${loginMode === "login" ? "Inget konto? Registrera dig" : "Har du konto? Logga in"}</button>
+      <div id="auth-msg"></div>
+    </div>`;
+}
+
+function toggleMode() { loginMode = loginMode === "login" ? "register" : "login"; showLogin(); }
+
+async function doAuth() {
+  const email = document.getElementById("l-email").value;
+  const pass = document.getElementById("l-pass").value;
+  const msg = document.getElementById("auth-msg");
+  msg.innerHTML = `<div style="text-align:center;margin-top:10px"><div class="spinner"></div></div>`;
+  let result;
+  if (loginMode === "login") result = await sb.auth.signInWithPassword({ email, password: pass });
+  else result = await sb.auth.signUp({ email, password: pass });
+  if (result.error) { msg.innerHTML = `<div class="error-msg">${result.error.message}</div>`; return; }
+  if (loginMode === "register") { msg.innerHTML = `<div class="success-msg">Konto skapat! Kolla din e-post för att bekräfta.</div>`; return; }
+  currentUser = result.data.user;
+  showApp();
+}
+
+async function logout() {
+  await sb.auth.signOut();
+  currentUser = null; rows = []; files = {};
+  showLogin();
+}
+
+// ---- DATA ----
+async function loadData() {
+  const { data, error } = await sb.from("containers").select("*").order("created_at", { ascending: false });
+  if (!error) rows = data || [];
+}
+
+async function loadFiles(containerId) {
+  const { data } = await sb.storage.from("container-files").list(containerId + "/");
+  files[containerId] = data || [];
+}
+
+async function saveRow(row) {
+  const { id, created_at, ...rest } = row;
+  if (id) {
+    await sb.from("containers").update(rest).eq("id", id);
+  } else {
+    await sb.from("containers").insert([rest]);
+  }
+  await loadData();
+  render();
+}
+
+async function deleteRow(id) {
+  if (!confirm("Ta bort denna container?")) return;
+  await sb.from("containers").delete().eq("id", id);
+  await loadData();
+  render();
+}
+
+async function uploadFile(containerId, file) {
+  const path = `${containerId}/${Date.now()}_${file.name}`;
+  await sb.storage.from("container-files").upload(path, file);
+  await loadFiles(containerId);
+  render();
+}
+
+async function getFileUrl(containerId, fileName) {
+  const { data } = sb.storage.from("container-files").getPublicUrl(`${containerId}/${fileName}`);
+  return data.publicUrl;
+}
+
+// ---- UI ----
 function badge(status) {
   const c = STATUS_CFG[status] || STATUS_CFG["Bokad"];
   return `<span class="badge" style="background:${c.bg};color:${c.text}"><span class="dot" style="background:${c.dot}"></span>${status}</span>`;
 }
 function chk(v) { return `<span style="color:${v?"#10B981":"#D1D5DB"};font-size:16px">${v?"✓":"✗"}</span>`; }
-function docsDone(r) { return [r.invoice,r.packingList,r.blDok,r.tull].filter(Boolean).length; }
+function docsDone(r) { return [r.invoice,r.packing_list,r.bl_dok,r.tull].filter(Boolean).length; }
+
+function emptyRow() {
+  return { leverantor:"", container_nr:"", bl:"", etd:"", eta:"", status:"Bokad", invoice:false, packing_list:false, bl_dok:false, tull:false, levererad:false, kommentar:"" };
+}
+
+let formObj = emptyRow();
+
+function readForm() {
+  return {
+    leverantor: document.getElementById("f-lev").value,
+    container_nr: document.getElementById("f-cnr").value,
+    bl: document.getElementById("f-bl").value,
+    etd: document.getElementById("f-etd").value || null,
+    eta: document.getElementById("f-eta").value || null,
+    status: document.getElementById("f-status").value,
+    kommentar: document.getElementById("f-kom").value,
+    invoice: document.getElementById("f-inv").checked,
+    packing_list: document.getElementById("f-pl").checked,
+    bl_dok: document.getElementById("f-bld").checked,
+    tull: document.getElementById("f-tull").checked,
+    levererad: document.getElementById("f-lev2").checked,
+  };
+}
 
 function formHTML(obj, title, saveF, cancelF) {
   return `<div class="form-panel">
     <h3>${title}</h3>
     <div class="form-grid">
-      <div class="form-field full"><label>Leverantör</label><input id="f-lev" value="${obj.leverantor}"></div>
-      <div class="form-field"><label>Container-nr</label><input id="f-cnr" value="${obj.containerNr}"></div>
-      <div class="form-field"><label>B/L-nr</label><input id="f-bl" value="${obj.bl}"></div>
-      <div class="form-field"><label>ETD (avgång)</label><input type="date" id="f-etd" value="${obj.etd}"></div>
-      <div class="form-field"><label>ETA (ankomst)</label><input type="date" id="f-eta" value="${obj.eta}"></div>
-      <div class="form-field full"><label>Status</label><select id="f-status">${STATUSES.map(s=>`<option${s===obj.status?" selected":""}>${s}</option>`).join("")}</select></div>
-      <div class="form-field full"><label>Kommentar</label><input id="f-kom" value="${obj.kommentar}"></div>
+      <div class="form-field full"><label>LEVERANTÖR</label><input id="f-lev" value="${obj.leverantor||""}"></div>
+      <div class="form-field"><label>CONTAINER-NR</label><input id="f-cnr" value="${obj.container_nr||""}"></div>
+      <div class="form-field"><label>B/L-NR</label><input id="f-bl" value="${obj.bl||""}"></div>
+      <div class="form-field"><label>ETD (AVGÅNG)</label><input type="date" id="f-etd" value="${obj.etd||""}"></div>
+      <div class="form-field"><label>ETA (ANKOMST)</label><input type="date" id="f-eta" value="${obj.eta||""}"></div>
+      <div class="form-field full"><label>STATUS</label><select id="f-status">${STATUSES.map(s=>`<option${s===obj.status?" selected":""}>${s}</option>`).join("")}</select></div>
+      <div class="form-field full"><label>KOMMENTAR</label><input id="f-kom" value="${obj.kommentar||""}"></div>
     </div>
     <div class="checks">
       <label><input type="checkbox" id="f-inv"${obj.invoice?" checked":""}> Invoice</label>
-      <label><input type="checkbox" id="f-pl"${obj.packingList?" checked":""}> Packing List</label>
-      <label><input type="checkbox" id="f-bld"${obj.blDok?" checked":""}> B/L</label>
+      <label><input type="checkbox" id="f-pl"${obj.packing_list?" checked":""}> Packing List</label>
+      <label><input type="checkbox" id="f-bld"${obj.bl_dok?" checked":""}> B/L</label>
       <label><input type="checkbox" id="f-tull"${obj.tull?" checked":""}> Tull klar</label>
       <label><input type="checkbox" id="f-lev2"${obj.levererad?" checked":""}> Levererad</label>
     </div>
@@ -139,113 +271,136 @@ function formHTML(obj, title, saveF, cancelF) {
   </div>`;
 }
 
-function readForm() {
-  return {
-    leverantor: document.getElementById("f-lev").value,
-    containerNr: document.getElementById("f-cnr").value,
-    bl: document.getElementById("f-bl").value,
-    etd: document.getElementById("f-etd").value,
-    eta: document.getElementById("f-eta").value,
-    status: document.getElementById("f-status").value,
-    kommentar: document.getElementById("f-kom").value,
-    invoice: document.getElementById("f-inv").checked,
-    packingList: document.getElementById("f-pl").checked,
-    blDok: document.getElementById("f-bld").checked,
-    tull: document.getElementById("f-tull").checked,
-    levererad: document.getElementById("f-lev2").checked,
-  };
-}
-
-function showAdd() { addMode = true; newRow = emptyRow(); render(); }
+function showAddForm() { addMode = true; formObj = emptyRow(); render(); }
 function cancelAdd() { addMode = false; render(); }
-function saveAdd() {
+async function saveAdd() {
   const d = readForm();
-  rows.push({ ...newRow, ...d });
-  save(); addMode = false; render();
+  await saveRow(d);
+  addMode = false;
 }
 
-function startEdit(id) { editId = id; render(); }
+function startEdit(id) { editId = id; formObj = rows.find(r => r.id === id); render(); }
 function cancelEdit() { editId = null; render(); }
-function saveEdit() {
+async function saveEdit() {
   const d = readForm();
-  rows = rows.map(r => r.id === editId ? { ...r, ...d } : r);
-  save(); editId = null; render();
+  await saveRow({ ...formObj, ...d });
+  editId = null;
 }
-function deleteRow(id) {
-  if (!confirm("Ta bort denna container?")) return;
-  rows = rows.filter(r => r.id !== id);
-  save(); render();
-}
+
 function setFilter(s) { filterStatus = filterStatus === s ? "Alla" : s; render(); }
 
+function triggerUpload(containerId) {
+  const input = document.getElementById("upload-" + containerId);
+  if (input) input.click();
+}
+
+async function handleUpload(containerId, input) {
+  const file = input.files[0];
+  if (!file) return;
+  await uploadFile(containerId, file);
+}
+
+async function showApp() {
+  app.innerHTML = `<div class="loading"><div class="spinner"></div></div>`;
+  await loadData();
+  render();
+}
+
 function render() {
-  const q = document.getElementById("search").value.toLowerCase();
+  const q = (document.getElementById("search")?.value || "").toLowerCase();
   const filtered = rows.filter(r => {
     const ms = filterStatus === "Alla" || r.status === filterStatus;
-    const mq = !q || r.leverantor.toLowerCase().includes(q) || r.containerNr.toLowerCase().includes(q) || r.bl.toLowerCase().includes(q);
+    const mq = !q || (r.leverantor||"").toLowerCase().includes(q) || (r.container_nr||"").toLowerCase().includes(q) || (r.bl||"").toLowerCase().includes(q);
     return ms && mq;
   });
 
-  // Summary
   const counts = {};
   STATUSES.forEach(s => counts[s] = rows.filter(r => r.status === s).length);
-  document.getElementById("summary").innerHTML =
-    STATUSES.map(s => {
-      const c = STATUS_CFG[s];
-      const active = filterStatus === s;
-      return `<div class="summary-card${active?" active":""}" style="--dot:${c.dot};--bg:${c.bg}" onclick="setFilter('${s}')">
-        <div class="num">${counts[s]}</div><div class="lbl">${s}</div></div>`;
-    }).join("") +
-    `<div class="summary-card" style="--dot:#1A2B4A;--bg:#EEF2F7">
-      <div class="num" style="color:#1A2B4A">${rows.length}</div><div class="lbl">Totalt</div></div>`;
 
-  // Add form
-  document.getElementById("add-form").innerHTML = addMode
-    ? formHTML(newRow, "Lägg till container", "saveAdd", "cancelAdd") : "";
+  const summaryHTML = STATUSES.map(s => {
+    const c = STATUS_CFG[s];
+    const active = filterStatus === s;
+    return `<div class="summary-card${active?" active":""}" style="--dot:${c.dot};--bg:${c.bg}" onclick="setFilter('${s}')">
+      <div class="num">${counts[s]}</div><div class="lbl">${s}</div></div>`;
+  }).join("") + `<div class="summary-card" style="--dot:#1A2B4A;--bg:#EEF2F7">
+    <div class="num" style="color:#1A2B4A">${rows.length}</div><div class="lbl">Totalt</div></div>`;
 
-  // List
-  if (filtered.length === 0) {
-    document.getElementById("list").innerHTML = `<div class="empty">Inga containers matchar sökningen.</div>`;
-    return;
-  }
-  document.getElementById("list").innerHTML = filtered.map(r => {
-    if (r.id === editId) {
-      return `<div class="card"><div class="card-body">${formHTML(r, "Redigera container", "saveEdit", "cancelEdit")}</div></div>`;
+  const addFormHTML = addMode ? formHTML(formObj, "Lägg till container", "saveAdd", "cancelAdd") : "";
+
+  const listHTML = filtered.length === 0
+    ? `<div class="empty">Inga containers ännu. Lägg till din första!</div>`
+    : filtered.map(r => {
+        if (r.id === editId) {
+          return `<div class="card"><div class="card-body">${formHTML(r, "Redigera container", "saveEdit", "cancelEdit")}</div></div>`;
+        }
+        const done = docsDone(r);
+        const pct = (done / 4) * 100;
+        const pcolor = done === 4 ? "#10B981" : "#3B82F6";
+        const rfiles = files[r.id] || [];
+        const filesHTML = rfiles.length > 0
+          ? rfiles.map(f => `<div class="file-item"><a href="${SUPABASE_URL}/storage/v1/object/public/container-files/${r.id}/${f.name}" target="_blank">📄 ${f.name}</a></div>`).join("")
+          : `<div style="font-size:12px;color:#9CA3AF">Inga filer uppladdade</div>`;
+
+        return `<div class="card"><div class="card-body">
+          <div class="card-top">
+            <div>
+              <div class="card-title">${r.container_nr||"–"} ${badge(r.status)}</div>
+            </div>
+            <div class="card-actions">
+              <button class="btn-edit" onclick="startEdit('${r.id}')">Redigera</button>
+              <button class="btn-del" onclick="deleteRow('${r.id}')">✕</button>
+            </div>
+          </div>
+          <div class="card-meta"><b>${r.leverantor||"–"}</b>${r.bl ? " · B/L: "+r.bl : ""}</div>
+          <div class="card-dates">
+            ${r.etd ? `<span>📤 ETD: <b>${r.etd}</b></span>` : ""}
+            ${r.eta ? `<span>📥 ETA: <b>${r.eta}</b></span>` : ""}
+          </div>
+          <div class="docs">
+            <span>Invoice ${chk(r.invoice)}</span>
+            <span>Packing List ${chk(r.packing_list)}</span>
+            <span>B/L ${chk(r.bl_dok)}</span>
+            <span>Tull ${chk(r.tull)}</span>
+          </div>
+          <div class="progress-wrap">
+            <div class="progress-label">Dokumentstatus ${done}/4</div>
+            <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${pcolor}"></div></div>
+          </div>
+          ${r.kommentar ? `<div class="comment">💬 ${r.kommentar}</div>` : ""}
+          <div class="files-section">
+            <div class="files-title">📎 BIFOGADE FILER</div>
+            <div class="file-list">${filesHTML}</div>
+            <input type="file" class="upload-input" id="upload-${r.id}" onchange="handleUpload('${r.id}', this)">
+            <button class="btn-upload" onclick="triggerUpload('${r.id}')">+ Ladda upp fil</button>
+          </div>
+        </div></div>`;
+      }).join("");
+
+  app.innerHTML = `
+    <div class="topbar">
+      <span class="user-info">Inloggad: ${currentUser?.email}</span>
+      <button class="btn-logout" onclick="logout()">Logga ut</button>
+    </div>
+    <div class="summary">${summaryHTML}</div>
+    <div class="toolbar">
+      <input type="search" id="search" placeholder="Sök leverantör, container-nr, B/L..." oninput="render()">
+      <button class="btn-add" onclick="showAddForm()">+ Ny</button>
+    </div>
+    ${addFormHTML}
+    ${listHTML}`;
+
+  // Load files for visible cards
+  filtered.forEach(r => {
+    if (r.id !== editId && !files[r.id]) {
+      loadFiles(r.id).then(() => {
+        const el = document.getElementById("upload-" + r.id);
+        if (el) render();
+      });
     }
-    const done = docsDone(r);
-    const pct = (done / 4) * 100;
-    const pcolor = done === 4 ? "#10B981" : "#3B82F6";
-    return `<div class="card"><div class="card-body">
-      <div class="card-top">
-        <div>
-          <div class="card-title">${r.containerNr || "–"} ${badge(r.status)}</div>
-        </div>
-        <div class="card-actions">
-          <button class="btn-edit" onclick="startEdit(${r.id})">Redigera</button>
-          <button class="btn-del" onclick="deleteRow(${r.id})">✕</button>
-        </div>
-      </div>
-      <div class="card-meta"><b>${r.leverantor || "–"}</b>${r.bl ? " · B/L: " + r.bl : ""}</div>
-      <div class="card-dates">
-        ${r.etd ? `<span>📤 ETD: <b>${r.etd}</b></span>` : ""}
-        ${r.eta ? `<span>📥 ETA: <b>${r.eta}</b></span>` : ""}
-      </div>
-      <div class="docs">
-        <span>Invoice ${chk(r.invoice)}</span>
-        <span>Packing List ${chk(r.packingList)}</span>
-        <span>B/L ${chk(r.blDok)}</span>
-        <span>Tull ${chk(r.tull)}</span>
-      </div>
-      <div class="progress-wrap">
-        <div class="progress-label">Dokumentstatus ${done}/4</div>
-        <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${pcolor}"></div></div>
-      </div>
-      ${r.kommentar ? `<div class="comment">💬 ${r.kommentar}</div>` : ""}
-    </div></div>`;
-  }).join("");
+  });
 }
 
-render();
+init();
 </script>
 </body>
 </html>
