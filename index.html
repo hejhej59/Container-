@@ -241,8 +241,8 @@ function render() {
           <div class="card-top">
             <div><div class="card-title">${r.container_nr||"–"} ${badge(r.status)}</div></div>
             <div class="card-actions">
-              <button class="btn-edit" onclick="startEdit('${r.id}')">Redigera</button>
-              <button class="btn-del" onclick="deleteRow('${r.id}')">✕</button>
+              <button class="btn-edit" data-id="${r.id}" onclick="startEdit(this.dataset.id)">Redigera</button>
+              <button class="btn-del" data-id="${r.id}" onclick="deleteRow(this.dataset.id)">✕</button>
             </div>
           </div>
           <div class="card-meta"><b>${r.leverantor||"–"}</b>${r.bl?" · B/L: "+r.bl:""}</div>
@@ -264,8 +264,8 @@ function render() {
           <div class="files-section">
             <div class="files-title">📎 BIFOGADE FILER</div>
             <div class="file-list">${filesHTML}</div>
-            <input type="file" class="upload-input" id="upload-${r.id}" onchange="handleUpload('${r.id}',this)">
-            <button class="btn-upload" onclick="triggerUpload('${r.id}')">+ Ladda upp fil</button>
+            <input type="file" class="upload-input" id="upload-${r.id}" data-id="${r.id}" onchange="handleUpload(this.dataset.id,this)">
+            <button class="btn-upload" data-id="${r.id}" onclick="triggerUpload(this.dataset.id)">+ Ladda upp fil</button>
           </div>
         </div></div>`;
       }).join("");
