@@ -50,6 +50,7 @@ header p { font-size: 12px; color: #B0BACB; margin-top: 4px; margin-left: 42px; 
 .card-dates b { color: #374151; }
 .card-dates .overdue, .card-dates .overdue b { color: #DC2626; }
 .overdue-pill { background: #FEE2E2; color: #B91C1C; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 999px; margin-left: 4px; text-transform: uppercase; letter-spacing: 0.03em; }
+.missing-pill { background: #FEF3C7; color: #92400E; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 999px; margin-left: 6px; text-transform: uppercase; letter-spacing: 0.03em; }
 .docs { display: flex; gap: 10px; font-size: 12px; color: #6B7280; flex-wrap: wrap; margin-bottom: 8px; }
 .progress-wrap { max-width: 260px; margin-bottom: 8px; }
 .progress-label { font-size: 11px; color: #9CA3AF; margin-bottom: 3px; }
@@ -293,10 +294,14 @@ async function deleteRow(id) {
   render();
 }
 
-async function uploadFile(containerId, file) {
-  const path = `${containerId}/${Date.now()}_${file.name}`;
-  const { error } = await sb.storage.from("container-files").upload(path, file);
-  if (error) { alert("Could not upload file: " + error.message); return; }
+async function uploadFiles(containerId, fileList) {
+  const failed = [];
+  for (const file of Array.from(fileList)) {
+    const path = `${containerId}/${Date.now()}_${file.name}`;
+    const { error } = await sb.storage.from("container-files").upload(path, file);
+    if (error) failed.push(`${file.name}: ${error.message}`);
+  }
+  if (failed.length) alert("Could not upload:\n" + failed.join("\n"));
   await loadFiles(containerId);
   render();
 }
@@ -550,13 +555,13 @@ function render() {
             <span>Customs ${chk(r.tull)}</span>
           </div>
           <div class="progress-wrap">
-            <div class="progress-label">Document status ${done}/4</div>
+            <div class="progress-label">Document status ${done}/4${done<4?`<span class="missing-pill">${4-done} missing</span>`:""}</div>
             <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${pcolor}"></div></div>
           </div>
           <div class="files-section">
             <div class="files-title">${ICONS.clip} ATTACHED FILES</div>
             <div class="file-list">${filesHTML}</div>
-            <input type="file" class="upload-input" id="upload-${r.id}" data-id="${r.id}">
+            <input type="file" class="upload-input" id="upload-${r.id}" data-id="${r.id}" multiple>
             <button class="btn-upload" data-action="upload" data-id="${r.id}">+ Upload file</button>
           </div>
           <div class="comments-section">
@@ -648,11 +653,10 @@ document.addEventListener("change", async function(e) {
   const input = e.target.closest("input[type=file]");
   if (!input) return;
   const id = input.dataset.id;
-  const file = input.files[0];
-  if (!file || !id) return;
+  if (!input.files.length || !id) return;
   const btn = document.querySelector(`[data-action="upload"][data-id="${id}"]`);
-  if (btn) { btn.disabled = true; btn.textContent = "Laddar upp..."; }
-  await uploadFile(id, file);
+  if (btn) { btn.disabled = true; btn.textContent = "Uploading..."; }
+  await uploadFiles(id, input.files);
 });
 init();
 </script>
