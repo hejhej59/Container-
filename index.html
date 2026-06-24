@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="sv">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Containers">
 <meta name="theme-color" content="#1A2B4A">
-<title>Containerregister</title>
+<title>Container Registry</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@500;600&family=Fira+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -51,7 +51,6 @@ header p { font-size: 12px; color: #B0BACB; margin-top: 4px; margin-left: 42px; 
 .progress-label { font-size: 11px; color: #9CA3AF; margin-bottom: 3px; }
 .progress-bar { height: 6px; background: #E5E7EB; border-radius: 99px; }
 .progress-fill { height: 6px; border-radius: 99px; transition: width 0.3s; }
-.comment { font-size: 12px; color: #374151; background: #F8FAFC; border-radius: 6px; padding: 5px 10px; margin-top: 6px; display: inline-block; }
 .files-section { margin-top: 10px; border-top: 1px solid #F1F5F9; padding-top: 10px; }
 .files-title { font-size: 11px; color: #6B7280; font-weight: 600; margin-bottom: 6px; }
 .file-list { display: flex; flex-direction: column; gap: 5px; margin-bottom: 8px; }
@@ -59,6 +58,14 @@ header p { font-size: 12px; color: #B0BACB; margin-top: 4px; margin-left: 42px; 
 .file-item a { color: #2563EB; text-decoration: none; font-weight: 500; font-size: 12px; display: flex; align-items: center; gap: 5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
 .btn-upload { background: #EEF2F7; border: none; border-radius: 7px; padding: 8px 14px; font-size: 12px; font-weight: 600; cursor: pointer; color: #374151; font-family: inherit; transition: background-color 0.15s; }
 .upload-input { display: none; }
+.comments-section { margin-top: 10px; border-top: 1px solid #F1F5F9; padding-top: 10px; }
+.comments-title { font-size: 11px; color: #6B7280; font-weight: 600; margin-bottom: 6px; }
+.comment-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; max-height: 220px; overflow-y: auto; }
+.comment-item { font-size: 12px; color: #374151; background: #F8FAFC; border-radius: 6px; padding: 7px 10px; }
+.comment-item .comment-meta { font-size: 10px; color: #9CA3AF; margin-top: 3px; }
+.comment-add { display: flex; gap: 6px; }
+.comment-add input { flex: 1; border: 1px solid #D1D5DB; border-radius: 6px; padding: 9px 10px; font-size: 16px; font-family: inherit; outline: none; min-width: 0; }
+.btn-comment { background: #1A2B4A; color: #fff; border: none; border-radius: 6px; padding: 8px 14px; min-height: 40px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; transition: background-color 0.15s; }
 .form-panel { background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px; padding: 14px; margin-bottom: 14px; }
 .form-panel h3 { font-weight: 700; font-size: 15px; color: #1E293B; margin-bottom: 12px; }
 .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
@@ -112,6 +119,7 @@ button:focus-visible, .summary-card:focus-visible, input:focus-visible, select:f
   .summary-card:not(.active):hover { background: #F8FAFC; }
   .btn-login:hover { background: #15203A; }
   .btn-logout:hover { background: #F1F5F9; }
+  .btn-comment:hover { background: #15203A; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -122,8 +130,8 @@ button:focus-visible, .summary-card:focus-visible, input:focus-visible, select:f
 </head>
 <body>
 <header>
-  <h1><span class="icon-chip"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg></span>Containerregister</h1>
-  <p>Spåra containers, dokument och filer</p>
+  <h1><span class="icon-chip"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg></span>Container Registry</h1>
+  <p>Track containers, documents and files</p>
 </header>
 <div class="main" id="app">
   <div class="loading"><div class="spinner"></div></div>
@@ -133,6 +141,8 @@ const SUPABASE_URL = "https://bteartmrxbznoewfoajn.supabase.co";
 const SUPABASE_KEY = "sb_publishable_2JrtnRPJUE-yrlSybGkdhA_F6mZ5PvK";
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+// Internal status values are kept in Swedish to stay compatible with existing
+// stored data; STATUS_LABELS supplies the English text shown in the UI.
 const STATUS_CFG = {
   "Bokad":     { bg: "#DBEAFE", text: "#1E40AF", dot: "#3B82F6" },
   "På väg":    { bg: "#FEF3C7", text: "#92400E", dot: "#F59E0B" },
@@ -140,11 +150,19 @@ const STATUS_CFG = {
   "Förtullad": { bg: "#D1FAE5", text: "#065F46", dot: "#10B981" },
   "Levererad": { bg: "#F3F4F6", text: "#374151", dot: "#9CA3AF" },
 };
+const STATUS_LABELS = {
+  "Bokad": "Booked",
+  "På väg": "In Transit",
+  "I hamn": "In Port",
+  "Förtullad": "Customs Cleared",
+  "Levererad": "Delivered",
+};
 const STATUSES = Object.keys(STATUS_CFG);
 
 let rows = [];
 let files = {};
-let filterStatus = "Alla";
+let comments = {};
+let filterStatus = "All";
 let editId = null;
 let addMode = false;
 let formObj = emptyRow();
@@ -154,7 +172,7 @@ let loginMode = "login";
 const app = document.getElementById("app");
 
 function emptyRow() {
-  return { leverantor:"", container_nr:"", bl:"", etd:"", eta:"", status:"Bokad", invoice:false, packing_list:false, bl_dok:false, tull:false, levererad:false, kommentar:"" };
+  return { leverantor:"", container_nr:"", bl:"", etd:"", eta:"", status:"Bokad", invoice:false, packing_list:false, bl_dok:false, tull:false, levererad:false };
 }
 
 async function init() {
@@ -170,12 +188,12 @@ async function init() {
 function showLogin(errorMsg) {
   app.innerHTML = `
     <div class="login-wrap">
-      <h2>${loginMode === "login" ? "Logga in" : "Skapa konto"}</h2>
-      <p>Containerregister – säker åtkomst för ditt team</p>
-      <div class="login-field"><label for="l-email">E-POST</label><input id="l-email" type="email" autocomplete="username" placeholder="din@email.com"></div>
-      <div class="login-field"><label for="l-pass">LÖSENORD</label><input id="l-pass" type="password" autocomplete="${loginMode === "login" ? "current-password" : "new-password"}" placeholder="••••••••"></div>
-      <button class="btn-login" id="l-submit" onclick="doAuth()">${loginMode === "login" ? "Logga in" : "Skapa konto"}</button>
-      <button class="btn-link" onclick="toggleMode()">${loginMode === "login" ? "Inget konto? Registrera dig" : "Har du konto? Logga in"}</button>
+      <h2>${loginMode === "login" ? "Log in" : "Create account"}</h2>
+      <p>Container Registry – secure access for your team</p>
+      <div class="login-field"><label for="l-email">EMAIL</label><input id="l-email" type="email" autocomplete="username" placeholder="you@email.com"></div>
+      <div class="login-field"><label for="l-pass">PASSWORD</label><input id="l-pass" type="password" autocomplete="${loginMode === "login" ? "current-password" : "new-password"}" placeholder="••••••••"></div>
+      <button class="btn-login" id="l-submit" onclick="doAuth()">${loginMode === "login" ? "Log in" : "Create account"}</button>
+      <button class="btn-link" onclick="toggleMode()">${loginMode === "login" ? "No account? Sign up" : "Already have an account? Log in"}</button>
       <div id="auth-msg">${errorMsg ? `<div class="error-msg">${esc(errorMsg)}</div>` : ""}</div>
     </div>`;
   document.getElementById("l-pass")?.addEventListener("keydown", e => { if (e.key === "Enter") doAuth(); });
@@ -188,9 +206,9 @@ async function doAuth() {
   const pass = document.getElementById("l-pass").value;
   const btn = document.getElementById("l-submit");
   const msg = document.getElementById("auth-msg");
-  if (!email || !pass) { msg.innerHTML = `<div class="error-msg">Fyll i e-post och lösenord.</div>`; return; }
+  if (!email || !pass) { msg.innerHTML = `<div class="error-msg">Please enter email and password.</div>`; return; }
   btn.disabled = true;
-  btn.textContent = loginMode === "login" ? "Loggar in..." : "Skapar konto...";
+  btn.textContent = loginMode === "login" ? "Logging in..." : "Creating account...";
   msg.innerHTML = "";
   const result = loginMode === "login"
     ? await sb.auth.signInWithPassword({ email, password: pass })
@@ -198,13 +216,13 @@ async function doAuth() {
   if (result.error) {
     msg.innerHTML = `<div class="error-msg">${esc(result.error.message)}</div>`;
     btn.disabled = false;
-    btn.textContent = loginMode === "login" ? "Logga in" : "Skapa konto";
+    btn.textContent = loginMode === "login" ? "Log in" : "Create account";
     return;
   }
   if (loginMode === "register" && !result.data.session) {
-    msg.innerHTML = `<div class="success-msg">Konto skapat! Kolla din e-post för att bekräfta.</div>`;
+    msg.innerHTML = `<div class="success-msg">Account created! Check your email to confirm.</div>`;
     btn.disabled = false;
-    btn.textContent = "Skapa konto";
+    btn.textContent = "Create account";
     return;
   }
   currentUser = result.data.user;
@@ -213,7 +231,7 @@ async function doAuth() {
 
 async function logout() {
   await sb.auth.signOut();
-  currentUser = null; rows = []; files = {};
+  currentUser = null; rows = []; files = {}; comments = {};
   showLogin();
 }
 
@@ -245,16 +263,16 @@ async function saveRow(row) {
   const { error } = id
     ? await sb.from("containers").update(rest).eq("id", id)
     : await sb.from("containers").insert([rest]);
-  if (error) { alert("Kunde inte spara: " + error.message); return false; }
+  if (error) { alert("Could not save: " + error.message); return false; }
   await loadData();
   render();
   return true;
 }
 
 async function deleteRow(id) {
-  if (!confirm("Ta bort denna container?")) return;
+  if (!confirm("Delete this container?")) return;
   const { error } = await sb.from("containers").delete().eq("id", id);
-  if (error) { alert("Kunde inte ta bort: " + error.message); return; }
+  if (error) { alert("Could not delete: " + error.message); return; }
   await loadData();
   render();
 }
@@ -262,14 +280,28 @@ async function deleteRow(id) {
 async function uploadFile(containerId, file) {
   const path = `${containerId}/${Date.now()}_${file.name}`;
   const { error } = await sb.storage.from("container-files").upload(path, file);
-  if (error) { alert("Kunde inte ladda upp filen: " + error.message); return; }
+  if (error) { alert("Could not upload file: " + error.message); return; }
   await loadFiles(containerId);
+  render();
+}
+
+async function loadComments(containerId) {
+  const { data, error } = await sb.from("container_comments").select("*").eq("container_id", containerId).order("created_at", { ascending: false });
+  comments[containerId] = !error && data ? data : [];
+}
+
+async function addComment(containerId, text) {
+  if (!text.trim()) return;
+  const { error } = await sb.from("container_comments").insert([{ container_id: containerId, body: text.trim(), author: currentUser?.email || null }]);
+  if (error) { alert("Could not add comment: " + error.message); return; }
+  await loadComments(containerId);
   render();
 }
 
 function badge(status) {
   const c = STATUS_CFG[status] || STATUS_CFG["Bokad"];
-  return `<span class="badge" style="background:${c.bg};color:${c.text}"><span class="dot" style="background:${c.dot}"></span>${status}</span>`;
+  const label = STATUS_LABELS[status] || status;
+  return `<span class="badge" style="background:${c.bg};color:${c.text}"><span class="dot" style="background:${c.dot}"></span>${esc(label)}</span>`;
 }
 function chk(v) { return `<span style="color:${v?"#10B981":"#D1D5DB"};font-size:16px">${v?"✓":"✗"}</span>`; }
 function docsDone(r) { return [r.invoice,r.packing_list,r.bl_dok,r.tull].filter(Boolean).length; }
@@ -293,7 +325,6 @@ function readForm() {
     etd: document.getElementById("f-etd").value || null,
     eta: document.getElementById("f-eta").value || null,
     status: document.getElementById("f-status").value,
-    kommentar: document.getElementById("f-kom").value,
     invoice: document.getElementById("f-inv").checked,
     packing_list: document.getElementById("f-pl").checked,
     bl_dok: document.getElementById("f-bld").checked,
@@ -306,24 +337,23 @@ function formHTML(obj, title, saveF, cancelF) {
   return `<div class="form-panel">
     <h3>${title}</h3>
     <div class="form-grid">
-      <div class="form-field full"><label for="f-lev">LEVERANTÖR</label><input id="f-lev" value="${esc(obj.leverantor)}"></div>
-      <div class="form-field"><label for="f-cnr">CONTAINER-NR</label><input id="f-cnr" value="${esc(obj.container_nr)}"></div>
-      <div class="form-field"><label for="f-bl">B/L-NR</label><input id="f-bl" value="${esc(obj.bl)}"></div>
-      <div class="form-field"><label for="f-etd">ETD (AVGÅNG)</label><input type="date" id="f-etd" value="${esc(obj.etd)}"></div>
-      <div class="form-field"><label for="f-eta">ETA (ANKOMST)</label><input type="date" id="f-eta" value="${esc(obj.eta)}"></div>
-      <div class="form-field full"><label for="f-status">STATUS</label><select id="f-status">${STATUSES.map(s=>`<option${s===obj.status?" selected":""}>${esc(s)}</option>`).join("")}</select></div>
-      <div class="form-field full"><label for="f-kom">KOMMENTAR</label><input id="f-kom" value="${esc(obj.kommentar)}"></div>
+      <div class="form-field full"><label for="f-lev">SUPPLIER</label><input id="f-lev" value="${esc(obj.leverantor)}"></div>
+      <div class="form-field"><label for="f-cnr">CONTAINER NO.</label><input id="f-cnr" value="${esc(obj.container_nr)}"></div>
+      <div class="form-field"><label for="f-bl">B/L NO.</label><input id="f-bl" value="${esc(obj.bl)}"></div>
+      <div class="form-field"><label for="f-etd">ETD (DEPARTURE)</label><input type="date" id="f-etd" value="${esc(obj.etd)}"></div>
+      <div class="form-field"><label for="f-eta">ETA (ARRIVAL)</label><input type="date" id="f-eta" value="${esc(obj.eta)}"></div>
+      <div class="form-field full"><label for="f-status">STATUS</label><select id="f-status">${STATUSES.map(s=>`<option value="${esc(s)}"${s===obj.status?" selected":""}>${esc(STATUS_LABELS[s]||s)}</option>`).join("")}</select></div>
     </div>
     <div class="checks">
       <label><input type="checkbox" id="f-inv"${obj.invoice?" checked":""}> Invoice</label>
       <label><input type="checkbox" id="f-pl"${obj.packing_list?" checked":""}> Packing List</label>
       <label><input type="checkbox" id="f-bld"${obj.bl_dok?" checked":""}> B/L</label>
-      <label><input type="checkbox" id="f-tull"${obj.tull?" checked":""}> Tull klar</label>
-      <label><input type="checkbox" id="f-lev2"${obj.levererad?" checked":""}> Levererad</label>
+      <label><input type="checkbox" id="f-tull"${obj.tull?" checked":""}> Customs Cleared</label>
+      <label><input type="checkbox" id="f-lev2"${obj.levererad?" checked":""}> Delivered</label>
     </div>
     <div class="form-btns">
-      <button class="btn-save" onclick="${saveF}()">Spara</button>
-      <button class="btn-cancel" onclick="${cancelF}()">Avbryt</button>
+      <button class="btn-save" onclick="${saveF}()">Save</button>
+      <button class="btn-cancel" onclick="${cancelF}()">Cancel</button>
     </div>
   </div>`;
 }
@@ -333,22 +363,22 @@ function cancelAdd() { addMode = false; render(); }
 async function saveAdd() {
   const d = readForm();
   const btn = document.querySelector(".form-panel .btn-save");
-  if (btn) { btn.disabled = true; btn.textContent = "Sparar..."; }
+  if (btn) { btn.disabled = true; btn.textContent = "Saving..."; }
   const ok = await saveRow(d);
   if (ok) addMode = false;
-  else if (btn) { btn.disabled = false; btn.textContent = "Spara"; }
+  else if (btn) { btn.disabled = false; btn.textContent = "Save"; }
 }
 function startEdit(id) { editId = id; formObj = rows.find(r => String(r.id) === String(id)); render(); }
 function cancelEdit() { editId = null; render(); }
 async function saveEdit() {
   const d = readForm();
   const btn = document.querySelector(".form-panel .btn-save");
-  if (btn) { btn.disabled = true; btn.textContent = "Sparar..."; }
+  if (btn) { btn.disabled = true; btn.textContent = "Saving..."; }
   const ok = await saveRow({ ...formObj, ...d });
   if (ok) editId = null;
-  else if (btn) { btn.disabled = false; btn.textContent = "Spara"; }
+  else if (btn) { btn.disabled = false; btn.textContent = "Save"; }
 }
-function setFilter(s) { filterStatus = filterStatus === s ? "Alla" : s; render(); }
+function setFilter(s) { filterStatus = filterStatus === s ? "All" : s; render(); }
 function triggerUpload(id) { document.getElementById("upload-"+id)?.click(); }
 
 function render() {
@@ -359,7 +389,7 @@ function render() {
   const q = searchEl?.value || "";
   const ql = q.toLowerCase();
   const filtered = rows.filter(r => {
-    const ms = filterStatus === "Alla" || r.status === filterStatus;
+    const ms = filterStatus === "All" || r.status === filterStatus;
     const mq = !ql || (r.leverantor||"").toLowerCase().includes(ql) || (r.container_nr||"").toLowerCase().includes(ql) || (r.bl||"").toLowerCase().includes(ql);
     return ms && mq;
   });
@@ -371,27 +401,31 @@ function render() {
     const c = STATUS_CFG[s];
     const active = filterStatus===s;
     return `<button type="button" class="summary-card${active?" active":""}" style="--dot:${c.dot};--bg:${c.bg}" aria-pressed="${active}" onclick="setFilter('${s}')">
-      <div class="num">${counts[s]}</div><div class="lbl">${s}</div></button>`;
+      <div class="num">${counts[s]}</div><div class="lbl">${esc(STATUS_LABELS[s]||s)}</div></button>`;
   }).join("") + `<div class="summary-card" style="--dot:#1A2B4A;--bg:#EEF2F7;cursor:default">
-    <div class="num" style="color:#1A2B4A">${rows.length}</div><div class="lbl">Totalt</div></div>`;
+    <div class="num" style="color:#1A2B4A">${rows.length}</div><div class="lbl">Total</div></div>`;
 
   const listHTML = filtered.length === 0
-    ? `<div class="empty">Inga containers ännu – tryck + Ny för att lägga till!</div>`
+    ? `<div class="empty">No containers yet – press + New to add one!</div>`
     : filtered.map(r => {
-        if (String(r.id) === String(editId)) return `<div class="card"><div class="card-body">${formHTML(r,"Redigera container","saveEdit","cancelEdit")}</div></div>`;
+        if (String(r.id) === String(editId)) return `<div class="card"><div class="card-body">${formHTML(r,"Edit container","saveEdit","cancelEdit")}</div></div>`;
         const done = docsDone(r);
         const pct = (done/4)*100;
         const pcolor = done===4?"#10B981":"#3B82F6";
         const rfiles = files[r.id] || [];
         const filesHTML = rfiles.length
           ? rfiles.map(f=>`<div class="file-item"><a href="${f.url||"#"}" target="_blank">${ICONS.file} ${esc(f.name)}</a></div>`).join("")
-          : `<div style="font-size:12px;color:#9CA3AF">Inga filer uppladdade</div>`;
+          : `<div style="font-size:12px;color:#9CA3AF">No files uploaded</div>`;
+        const rcomments = comments[r.id] || [];
+        const commentsHTML = rcomments.length
+          ? rcomments.map(c=>`<div class="comment-item">${esc(c.body)}<div class="comment-meta">${esc(c.author||"Unknown")} · ${new Date(c.created_at).toLocaleString()}</div></div>`).join("")
+          : `<div style="font-size:12px;color:#9CA3AF">No comments yet</div>`;
         return `<div class="card" style="--accent:${STATUS_CFG[r.status]?.dot||"#94A3B8"}"><div class="card-body">
           <div class="card-top">
             <div><div class="card-title mono">${esc(r.container_nr)||"–"}</div></div>
             <div class="card-actions">
-              <button class="btn-edit" data-action="edit" data-id="${r.id}">Redigera</button>
-              <button class="btn-del" data-action="delete" data-id="${r.id}" aria-label="Ta bort container">✕</button>
+              <button class="btn-edit" data-action="edit" data-id="${r.id}">Edit</button>
+              <button class="btn-del" data-action="delete" data-id="${r.id}" aria-label="Delete container">✕</button>
             </div>
           </div>
           <div class="card-meta"><b>${esc(r.leverantor)||"–"}</b>${r.bl?" · B/L: "+esc(r.bl):""} ${badge(r.status)}</div>
@@ -403,33 +437,40 @@ function render() {
             <span>Invoice ${chk(r.invoice)}</span>
             <span>Packing List ${chk(r.packing_list)}</span>
             <span>B/L ${chk(r.bl_dok)}</span>
-            <span>Tull ${chk(r.tull)}</span>
+            <span>Customs ${chk(r.tull)}</span>
           </div>
           <div class="progress-wrap">
-            <div class="progress-label">Dokumentstatus ${done}/4</div>
+            <div class="progress-label">Document status ${done}/4</div>
             <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${pcolor}"></div></div>
           </div>
-          ${r.kommentar?`<div class="comment">${ICONS.comment} ${esc(r.kommentar)}</div>`:""}
           <div class="files-section">
-            <div class="files-title">${ICONS.clip} BIFOGADE FILER</div>
+            <div class="files-title">${ICONS.clip} ATTACHED FILES</div>
             <div class="file-list">${filesHTML}</div>
             <input type="file" class="upload-input" id="upload-${r.id}" data-id="${r.id}">
-            <button class="btn-upload" data-action="upload" data-id="${r.id}">+ Ladda upp fil</button>
+            <button class="btn-upload" data-action="upload" data-id="${r.id}">+ Upload file</button>
+          </div>
+          <div class="comments-section">
+            <div class="comments-title">${ICONS.comment} COMMENT HISTORY</div>
+            <div class="comment-list">${commentsHTML}</div>
+            <div class="comment-add">
+              <input type="text" id="comment-input-${r.id}" placeholder="Add a comment...">
+              <button class="btn-comment" data-action="comment" data-id="${r.id}">Add</button>
+            </div>
           </div>
         </div></div>`;
       }).join("");
 
   app.innerHTML = `
     <div class="topbar">
-      <span class="user-info">Inloggad: ${esc(currentUser?.email||"")}</span>
-      <button class="btn-logout" onclick="logout()">Logga ut</button>
+      <span class="user-info">Logged in: ${esc(currentUser?.email||"")}</span>
+      <button class="btn-logout" onclick="logout()">Log out</button>
     </div>
     <div class="summary">${summaryHTML}</div>
     <div class="toolbar">
-      <div class="search-wrap">${ICONS.search}<input type="search" id="search" placeholder="Sök leverantör, container-nr, B/L..." value="${esc(q)}" oninput="render()"></div>
-      <button class="btn-add" onclick="showAddForm()">${ICONS.plus}Ny</button>
+      <div class="search-wrap">${ICONS.search}<input type="search" id="search" placeholder="Search supplier, container no., B/L..." value="${esc(q)}" oninput="render()"></div>
+      <button class="btn-add" onclick="showAddForm()">${ICONS.plus}New</button>
     </div>
-    ${addMode ? formHTML(formObj,"Lägg till container","saveAdd","cancelAdd") : ""}
+    ${addMode ? formHTML(formObj,"Add container","saveAdd","cancelAdd") : ""}
     ${listHTML}`;
 
   if (hadFocus) {
@@ -444,7 +485,18 @@ function render() {
     if (r.id !== editId && !files[r.id]) {
       loadFiles(r.id).then(() => render());
     }
+    if (r.id !== editId && !comments[r.id]) {
+      loadComments(r.id).then(() => render());
+    }
   });
+}
+
+function submitComment(id) {
+  const input = document.getElementById("comment-input-" + id);
+  if (!input) return;
+  const text = input.value;
+  input.value = "";
+  addComment(id, text);
 }
 
 // Event delegation
@@ -460,6 +512,13 @@ document.addEventListener("click", async function(e) {
     btn.disabled = false;
   }
   if (action === "upload") { document.getElementById("upload-" + id)?.click(); }
+  if (action === "comment") { submitComment(id); }
+});
+document.addEventListener("keydown", function(e) {
+  if (e.key !== "Enter") return;
+  const input = e.target.closest('input[id^="comment-input-"]');
+  if (!input) return;
+  submitComment(input.id.replace("comment-input-", ""));
 });
 document.addEventListener("change", async function(e) {
   const input = e.target.closest("input[type=file]");
