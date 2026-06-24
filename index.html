@@ -77,6 +77,21 @@ header p { font-size: 12px; color: #B0BACB; margin-top: 4px; margin-left: 42px; 
 .spinner { display: inline-block; width: 24px; height: 24px; border: 3px solid #E5E7EB; border-top-color: #2563EB; border-radius: 50%; animation: spin 0.6s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
+.login-wrap { max-width: 360px; margin: 48px auto 0; background: #fff; border-radius: 14px; padding: 28px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); }
+.login-wrap h2 { font-size: 18px; font-weight: 700; color: #1A2B4A; margin-bottom: 6px; }
+.login-wrap p { font-size: 13px; color: #6B7280; margin-bottom: 20px; }
+.login-field { display: flex; flex-direction: column; gap: 4px; margin-bottom: 14px; }
+.login-field label { font-size: 11px; color: #6B7280; font-weight: 600; }
+.login-field input { border: 1px solid #D1D5DB; border-radius: 8px; padding: 10px 12px; font-size: 16px; outline: none; font-family: inherit; }
+.btn-login { width: 100%; background: #1A2B4A; color: #fff; border: none; border-radius: 8px; padding: 12px; min-height: 44px; font-weight: 700; font-size: 14px; cursor: pointer; margin-top: 4px; font-family: inherit; transition: background-color 0.15s; }
+.btn-login:disabled { opacity: 0.6; cursor: default; }
+.btn-link { background: none; border: none; color: #2563EB; font-size: 13px; cursor: pointer; text-decoration: underline; margin-top: 14px; display: block; text-align: center; font-family: inherit; padding: 8px; }
+.error-msg { background: #FEE2E2; color: #B91C1C; border-radius: 7px; padding: 8px 12px; font-size: 13px; margin-top: 10px; }
+.success-msg { background: #D1FAE5; color: #065F46; border-radius: 7px; padding: 8px 12px; font-size: 13px; margin-top: 10px; }
+.topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; font-size: 12px; }
+.user-info { color: #6B7280; }
+.btn-logout { background: none; border: 1px solid #D1D5DB; border-radius: 7px; padding: 6px 12px; min-height: 32px; font-size: 12px; cursor: pointer; color: #374151; font-family: inherit; }
+
 .toolbar input:focus, .form-field input:focus, .form-field select:focus {
   border-color: #2563EB;
   box-shadow: 0 0 0 3px rgba(37,99,235,0.15);
@@ -95,6 +110,8 @@ button:focus-visible, .summary-card:focus-visible, input:focus-visible, select:f
   .btn-cancel:hover { background: #D1D5DB; }
   .card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
   .summary-card:not(.active):hover { background: #F8FAFC; }
+  .btn-login:hover { background: #15203A; }
+  .btn-logout:hover { background: #F1F5F9; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -131,6 +148,8 @@ let filterStatus = "Alla";
 let editId = null;
 let addMode = false;
 let formObj = emptyRow();
+let currentUser = null;
+let loginMode = "login";
 
 const app = document.getElementById("app");
 
@@ -139,6 +158,67 @@ function emptyRow() {
 }
 
 async function init() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) { currentUser = session.user; await showApp(); }
+  else showLogin();
+
+  sb.auth.onAuthStateChange((event, session) => {
+    if (event === "SIGNED_OUT") { currentUser = null; rows = []; files = {}; showLogin(); }
+  });
+}
+
+function showLogin(errorMsg) {
+  app.innerHTML = `
+    <div class="login-wrap">
+      <h2>${loginMode === "login" ? "Logga in" : "Skapa konto"}</h2>
+      <p>Containerregister – säker åtkomst för ditt team</p>
+      <div class="login-field"><label for="l-email">E-POST</label><input id="l-email" type="email" autocomplete="username" placeholder="din@email.com"></div>
+      <div class="login-field"><label for="l-pass">LÖSENORD</label><input id="l-pass" type="password" autocomplete="${loginMode === "login" ? "current-password" : "new-password"}" placeholder="••••••••"></div>
+      <button class="btn-login" id="l-submit" onclick="doAuth()">${loginMode === "login" ? "Logga in" : "Skapa konto"}</button>
+      <button class="btn-link" onclick="toggleMode()">${loginMode === "login" ? "Inget konto? Registrera dig" : "Har du konto? Logga in"}</button>
+      <div id="auth-msg">${errorMsg ? `<div class="error-msg">${esc(errorMsg)}</div>` : ""}</div>
+    </div>`;
+  document.getElementById("l-pass")?.addEventListener("keydown", e => { if (e.key === "Enter") doAuth(); });
+}
+
+function toggleMode() { loginMode = loginMode === "login" ? "register" : "login"; showLogin(); }
+
+async function doAuth() {
+  const email = document.getElementById("l-email").value.trim();
+  const pass = document.getElementById("l-pass").value;
+  const btn = document.getElementById("l-submit");
+  const msg = document.getElementById("auth-msg");
+  if (!email || !pass) { msg.innerHTML = `<div class="error-msg">Fyll i e-post och lösenord.</div>`; return; }
+  btn.disabled = true;
+  btn.textContent = loginMode === "login" ? "Loggar in..." : "Skapar konto...";
+  msg.innerHTML = "";
+  const result = loginMode === "login"
+    ? await sb.auth.signInWithPassword({ email, password: pass })
+    : await sb.auth.signUp({ email, password: pass });
+  if (result.error) {
+    msg.innerHTML = `<div class="error-msg">${esc(result.error.message)}</div>`;
+    btn.disabled = false;
+    btn.textContent = loginMode === "login" ? "Logga in" : "Skapa konto";
+    return;
+  }
+  if (loginMode === "register" && !result.data.session) {
+    msg.innerHTML = `<div class="success-msg">Konto skapat! Kolla din e-post för att bekräfta.</div>`;
+    btn.disabled = false;
+    btn.textContent = "Skapa konto";
+    return;
+  }
+  currentUser = result.data.user;
+  await showApp();
+}
+
+async function logout() {
+  await sb.auth.signOut();
+  currentUser = null; rows = []; files = {};
+  showLogin();
+}
+
+async function showApp() {
+  app.innerHTML = `<div class="loading"><div class="spinner"></div></div>`;
   await loadData();
   render();
 }
@@ -151,7 +231,12 @@ async function loadData() {
 async function loadFiles(containerId) {
   try {
     const { data } = await sb.storage.from("container-files").list(containerId + "/");
-    files[containerId] = data || [];
+    const list = data || [];
+    for (const f of list) {
+      const { data: signed } = await sb.storage.from("container-files").createSignedUrl(`${containerId}/${f.name}`, 3600);
+      f.url = signed?.signedUrl || null;
+    }
+    files[containerId] = list;
   } catch(e) { files[containerId] = []; }
 }
 
@@ -299,7 +384,7 @@ function render() {
         const pcolor = done===4?"#10B981":"#3B82F6";
         const rfiles = files[r.id] || [];
         const filesHTML = rfiles.length
-          ? rfiles.map(f=>`<div class="file-item"><a href="${SUPABASE_URL}/storage/v1/object/public/container-files/${r.id}/${encodeURIComponent(f.name)}" target="_blank">${ICONS.file} ${esc(f.name)}</a></div>`).join("")
+          ? rfiles.map(f=>`<div class="file-item"><a href="${f.url||"#"}" target="_blank">${ICONS.file} ${esc(f.name)}</a></div>`).join("")
           : `<div style="font-size:12px;color:#9CA3AF">Inga filer uppladdade</div>`;
         return `<div class="card" style="--accent:${STATUS_CFG[r.status]?.dot||"#94A3B8"}"><div class="card-body">
           <div class="card-top">
@@ -335,6 +420,10 @@ function render() {
       }).join("");
 
   app.innerHTML = `
+    <div class="topbar">
+      <span class="user-info">Inloggad: ${esc(currentUser?.email||"")}</span>
+      <button class="btn-logout" onclick="logout()">Logga ut</button>
+    </div>
     <div class="summary">${summaryHTML}</div>
     <div class="toolbar">
       <div class="search-wrap">${ICONS.search}<input type="search" id="search" placeholder="Sök leverantör, container-nr, B/L..." value="${esc(q)}" oninput="render()"></div>
