@@ -8,29 +8,39 @@
 <meta name="apple-mobile-web-app-title" content="Containers">
 <meta name="theme-color" content="#1A2B4A">
 <title>Containerregister</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@500;600&family=Fira+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #F1F5F9; min-height: 100vh; padding-bottom: 60px; }
-header { background: #1A2B4A; padding: 20px 16px 16px; position: sticky; top: 0; z-index: 100; }
-header h1 { font-size: 20px; font-weight: 800; color: #fff; }
-header p { font-size: 12px; color: #94A3B8; margin-top: 2px; }
+body { font-family: 'Fira Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #F1F5F9; min-height: 100vh; padding-bottom: 60px; }
+.mono { font-family: 'Fira Code', ui-monospace, SFMono-Regular, monospace; }
+header { background: #1A2B4A; padding: 20px 16px 18px; position: sticky; top: 0; z-index: 100; border-bottom: 3px solid #F97316; }
+header h1 { font-size: 20px; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 10px; letter-spacing: -0.2px; }
+header h1 .icon-chip { width: 32px; height: 32px; border-radius: 8px; background: rgba(255,255,255,0.12); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+header p { font-size: 12px; color: #B0BACB; margin-top: 4px; margin-left: 42px; }
 .main { max-width: 700px; margin: 0 auto; padding: 16px; }
 .summary { display: flex; gap: 8px; flex-wrap: nowrap; margin-bottom: 16px; overflow-x: auto; padding-bottom: 4px; }
-.summary-card { background: #fff; border: 2px solid #E5E7EB; border-radius: 10px; padding: 8px 12px; min-width: 80px; cursor: pointer; transition: all 0.15s; flex-shrink: 0; }
-.summary-card.active { border-color: var(--dot); background: var(--bg); }
-.summary-card .num { font-size: 20px; font-weight: 800; color: var(--dot); }
-.summary-card .lbl { font-size: 11px; color: #6B7280; font-weight: 600; }
+.summary-card { background: #fff; border-radius: 10px; padding: 10px 14px; min-width: 84px; min-height: 50px; cursor: pointer; transition: background-color 0.15s, color 0.15s; flex-shrink: 0; font-family: inherit; text-align: left; border: none; border-left: 4px solid var(--dot); box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+.summary-card.active { background: var(--dot); }
+.summary-card.active .num, .summary-card.active .lbl { color: #fff; }
+.summary-card .num { font-family: 'Fira Code', monospace; font-size: 22px; font-weight: 600; color: var(--dot); line-height: 1.1; }
+.summary-card .lbl { font-size: 10px; color: #6B7280; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; margin-top: 2px; display: block; }
 .toolbar { display: flex; gap: 8px; margin-bottom: 14px; }
-.toolbar input { flex: 1; border: 1px solid #D1D5DB; border-radius: 8px; padding: 10px 12px; font-size: 14px; outline: none; font-family: inherit; }
-.btn-add { background: #2563EB; color: #fff; border: none; border-radius: 8px; padding: 10px 16px; font-weight: 700; font-size: 14px; cursor: pointer; white-space: nowrap; }
-.card { background: #fff; border-radius: 12px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.07); }
+.search-wrap { position: relative; flex: 1; }
+.search-wrap svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #9CA3AF; pointer-events: none; }
+.toolbar input { width: 100%; border: 1px solid #D1D5DB; border-radius: 8px; padding: 11px 12px 11px 36px; font-size: 16px; outline: none; font-family: inherit; }
+.btn-add { background: #2563EB; color: #fff; border: none; border-radius: 8px; padding: 10px 18px; min-height: 44px; font-weight: 700; font-size: 14px; cursor: pointer; white-space: nowrap; transition: background-color 0.15s; display: inline-flex; align-items: center; gap: 6px; }
+.card { background: #fff; border-radius: 12px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.07); transition: box-shadow 0.15s; border-left: 4px solid var(--accent, #94A3B8); overflow: hidden; }
 .card-body { padding: 14px; }
 .card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 6px; }
-.card-title { font-weight: 700; font-size: 15px; color: #1E293B; }
-.card-actions { display: flex; gap: 6px; flex-shrink: 0; }
-.btn-edit { background: #EEF2F7; border: none; border-radius: 7px; padding: 5px 12px; font-size: 12px; font-weight: 600; cursor: pointer; color: #374151; font-family: inherit; }
-.btn-del { background: #FEE2E2; border: none; border-radius: 7px; padding: 5px 10px; font-size: 12px; font-weight: 600; cursor: pointer; color: #DC2626; font-family: inherit; }
+.card-title { font-weight: 700; font-size: 17px; color: #1E293B; }
+.card-actions { display: flex; gap: 8px; flex-shrink: 0; }
+.btn-edit, .btn-del, .btn-upload { display: inline-flex; align-items: center; justify-content: center; min-height: 40px; }
+.btn-edit { background: #EEF2F7; border: none; border-radius: 7px; padding: 8px 14px; font-size: 12px; font-weight: 600; cursor: pointer; color: #374151; font-family: inherit; transition: background-color 0.15s; }
+.btn-del { background: #FEE2E2; border: none; border-radius: 7px; padding: 8px 12px; min-width: 40px; font-size: 13px; font-weight: 600; cursor: pointer; color: #DC2626; font-family: inherit; transition: background-color 0.15s; }
+.btn-edit:disabled, .btn-del:disabled, .btn-save:disabled, .btn-upload:disabled { opacity: 0.6; cursor: default; }
 .badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 9px; border-radius: 999px; font-size: 11px; font-weight: 600; }
 .badge .dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
 .card-meta { font-size: 13px; color: #64748B; margin-bottom: 6px; }
@@ -45,31 +55,57 @@ header p { font-size: 12px; color: #94A3B8; margin-top: 2px; }
 .files-section { margin-top: 10px; border-top: 1px solid #F1F5F9; padding-top: 10px; }
 .files-title { font-size: 11px; color: #6B7280; font-weight: 600; margin-bottom: 6px; }
 .file-list { display: flex; flex-direction: column; gap: 5px; margin-bottom: 8px; }
-.file-item a { color: #2563EB; text-decoration: none; font-weight: 500; font-size: 12px; }
-.btn-upload { background: #EEF2F7; border: none; border-radius: 7px; padding: 6px 12px; font-size: 12px; font-weight: 600; cursor: pointer; color: #374151; font-family: inherit; }
+.file-item { min-width: 0; }
+.file-item a { color: #2563EB; text-decoration: none; font-weight: 500; font-size: 12px; display: flex; align-items: center; gap: 5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.btn-upload { background: #EEF2F7; border: none; border-radius: 7px; padding: 8px 14px; font-size: 12px; font-weight: 600; cursor: pointer; color: #374151; font-family: inherit; transition: background-color 0.15s; }
 .upload-input { display: none; }
 .form-panel { background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px; padding: 14px; margin-bottom: 14px; }
 .form-panel h3 { font-weight: 700; font-size: 15px; color: #1E293B; margin-bottom: 12px; }
 .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
-.form-field { display: flex; flex-direction: column; gap: 3px; }
+.form-field { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
 .form-field label { font-size: 11px; color: #6B7280; font-weight: 600; }
-.form-field input, .form-field select { border: 1px solid #D1D5DB; border-radius: 6px; padding: 7px 8px; font-size: 13px; font-family: inherit; outline: none; background: #fff; }
+.form-field input, .form-field select { border: 1px solid #D1D5DB; border-radius: 6px; padding: 9px 10px; font-size: 16px; font-family: inherit; outline: none; background: #fff; min-width: 0; width: 100%; }
 .form-field.full { grid-column: 1 / -1; }
-.checks { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 12px; font-size: 13px; }
-.checks label { display: flex; align-items: center; gap: 5px; cursor: pointer; }
-.checks input[type=checkbox] { width: 16px; height: 16px; accent-color: #3B82F6; }
+.checks { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; font-size: 13px; }
+.checks label { display: flex; align-items: center; gap: 6px; cursor: pointer; padding: 6px 4px; min-height: 36px; }
+.checks input[type=checkbox] { width: 18px; height: 18px; accent-color: #3B82F6; flex-shrink: 0; }
 .form-btns { display: flex; gap: 8px; }
-.btn-save { background: #1A2B4A; color: #fff; border: none; border-radius: 7px; padding: 9px 20px; font-weight: 700; font-size: 13px; cursor: pointer; font-family: inherit; }
-.btn-cancel { background: #E5E7EB; color: #374151; border: none; border-radius: 7px; padding: 9px 16px; font-weight: 700; font-size: 13px; cursor: pointer; font-family: inherit; }
+.btn-save { background: #1A2B4A; color: #fff; border: none; border-radius: 7px; padding: 10px 20px; min-height: 44px; font-weight: 700; font-size: 14px; cursor: pointer; font-family: inherit; transition: background-color 0.15s; }
+.btn-cancel { background: #E5E7EB; color: #374151; border: none; border-radius: 7px; padding: 10px 16px; min-height: 44px; font-weight: 700; font-size: 14px; cursor: pointer; font-family: inherit; transition: background-color 0.15s; }
 .loading { text-align: center; color: #9CA3AF; padding: 40px; }
 .empty { text-align: center; color: #9CA3AF; padding: 40px; background: #fff; border-radius: 12px; }
 .spinner { display: inline-block; width: 24px; height: 24px; border: 3px solid #E5E7EB; border-top-color: #2563EB; border-radius: 50%; animation: spin 0.6s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+.toolbar input:focus, .form-field input:focus, .form-field select:focus {
+  border-color: #2563EB;
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.15);
+}
+button:focus-visible, .summary-card:focus-visible, input:focus-visible, select:focus-visible {
+  outline: 2px solid #2563EB;
+  outline-offset: 2px;
+}
+
+@media (hover: hover) {
+  .btn-edit:hover { background: #E2E8F0; }
+  .btn-del:hover { background: #FECACA; }
+  .btn-upload:hover { background: #E2E8F0; }
+  .btn-add:hover { background: #1D4ED8; }
+  .btn-save:hover { background: #15203A; }
+  .btn-cancel:hover { background: #D1D5DB; }
+  .card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+  .summary-card:not(.active):hover { background: #F8FAFC; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner { animation: none; }
+  .card, .summary-card, .progress-fill, button { transition: none; }
+}
 </style>
 </head>
 <body>
 <header>
-  <h1>🚢 Containerregister</h1>
+  <h1><span class="icon-chip"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg></span>Containerregister</h1>
   <p>Spåra containers, dokument och filer</p>
 </header>
 <div class="main" id="app">
@@ -121,25 +157,27 @@ async function loadFiles(containerId) {
 
 async function saveRow(row) {
   const { id, created_at, ...rest } = row;
-  if (id) {
-    await sb.from("containers").update(rest).eq("id", id);
-  } else {
-    await sb.from("containers").insert([rest]);
-  }
+  const { error } = id
+    ? await sb.from("containers").update(rest).eq("id", id)
+    : await sb.from("containers").insert([rest]);
+  if (error) { alert("Kunde inte spara: " + error.message); return false; }
   await loadData();
   render();
+  return true;
 }
 
 async function deleteRow(id) {
   if (!confirm("Ta bort denna container?")) return;
-  await sb.from("containers").delete().eq("id", id);
+  const { error } = await sb.from("containers").delete().eq("id", id);
+  if (error) { alert("Kunde inte ta bort: " + error.message); return; }
   await loadData();
   render();
 }
 
 async function uploadFile(containerId, file) {
   const path = `${containerId}/${Date.now()}_${file.name}`;
-  await sb.storage.from("container-files").upload(path, file);
+  const { error } = await sb.storage.from("container-files").upload(path, file);
+  if (error) { alert("Kunde inte ladda upp filen: " + error.message); return; }
   await loadFiles(containerId);
   render();
 }
@@ -150,6 +188,17 @@ function badge(status) {
 }
 function chk(v) { return `<span style="color:${v?"#10B981":"#D1D5DB"};font-size:16px">${v?"✓":"✗"}</span>`; }
 function docsDone(r) { return [r.invoice,r.packing_list,r.bl_dok,r.tull].filter(Boolean).length; }
+function esc(s) { return String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+
+const ICONS = {
+  depart: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px" aria-hidden="true"><path d="M7 17 17 7"></path><path d="M7 7h10v10"></path></svg>`,
+  arrive: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px" aria-hidden="true"><path d="M17 7 7 17"></path><path d="M17 17H7V7"></path></svg>`,
+  comment: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>`,
+  clip: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px" aria-hidden="true"><path d="M21.44 11.05 12.25 20.24a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>`,
+  file: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>`,
+  search: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>`,
+  plus: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>`,
+};
 
 function readForm() {
   return {
@@ -172,13 +221,13 @@ function formHTML(obj, title, saveF, cancelF) {
   return `<div class="form-panel">
     <h3>${title}</h3>
     <div class="form-grid">
-      <div class="form-field full"><label>LEVERANTÖR</label><input id="f-lev" value="${obj.leverantor||""}"></div>
-      <div class="form-field"><label>CONTAINER-NR</label><input id="f-cnr" value="${obj.container_nr||""}"></div>
-      <div class="form-field"><label>B/L-NR</label><input id="f-bl" value="${obj.bl||""}"></div>
-      <div class="form-field"><label>ETD (AVGÅNG)</label><input type="date" id="f-etd" value="${obj.etd||""}"></div>
-      <div class="form-field"><label>ETA (ANKOMST)</label><input type="date" id="f-eta" value="${obj.eta||""}"></div>
-      <div class="form-field full"><label>STATUS</label><select id="f-status">${STATUSES.map(s=>`<option${s===obj.status?" selected":""}>${s}</option>`).join("")}</select></div>
-      <div class="form-field full"><label>KOMMENTAR</label><input id="f-kom" value="${obj.kommentar||""}"></div>
+      <div class="form-field full"><label for="f-lev">LEVERANTÖR</label><input id="f-lev" value="${esc(obj.leverantor)}"></div>
+      <div class="form-field"><label for="f-cnr">CONTAINER-NR</label><input id="f-cnr" value="${esc(obj.container_nr)}"></div>
+      <div class="form-field"><label for="f-bl">B/L-NR</label><input id="f-bl" value="${esc(obj.bl)}"></div>
+      <div class="form-field"><label for="f-etd">ETD (AVGÅNG)</label><input type="date" id="f-etd" value="${esc(obj.etd)}"></div>
+      <div class="form-field"><label for="f-eta">ETA (ANKOMST)</label><input type="date" id="f-eta" value="${esc(obj.eta)}"></div>
+      <div class="form-field full"><label for="f-status">STATUS</label><select id="f-status">${STATUSES.map(s=>`<option${s===obj.status?" selected":""}>${esc(s)}</option>`).join("")}</select></div>
+      <div class="form-field full"><label for="f-kom">KOMMENTAR</label><input id="f-kom" value="${esc(obj.kommentar)}"></div>
     </div>
     <div class="checks">
       <label><input type="checkbox" id="f-inv"${obj.invoice?" checked":""}> Invoice</label>
@@ -196,23 +245,37 @@ function formHTML(obj, title, saveF, cancelF) {
 
 function showAddForm() { addMode = true; formObj = emptyRow(); render(); }
 function cancelAdd() { addMode = false; render(); }
-async function saveAdd() { const d = readForm(); await saveRow(d); addMode = false; }
-function startEdit(id) { console.log("startEdit id:", id, "rows:", rows.map(r=>r.id)); editId = id; formObj = rows.find(r => String(r.id) === String(id)); console.log("formObj:", formObj); render(); }
+async function saveAdd() {
+  const d = readForm();
+  const btn = document.querySelector(".form-panel .btn-save");
+  if (btn) { btn.disabled = true; btn.textContent = "Sparar..."; }
+  const ok = await saveRow(d);
+  if (ok) addMode = false;
+  else if (btn) { btn.disabled = false; btn.textContent = "Spara"; }
+}
+function startEdit(id) { editId = id; formObj = rows.find(r => String(r.id) === String(id)); render(); }
 function cancelEdit() { editId = null; render(); }
-async function saveEdit() { const d = readForm(); await saveRow({ ...formObj, ...d }); editId = null; }
+async function saveEdit() {
+  const d = readForm();
+  const btn = document.querySelector(".form-panel .btn-save");
+  if (btn) { btn.disabled = true; btn.textContent = "Sparar..."; }
+  const ok = await saveRow({ ...formObj, ...d });
+  if (ok) editId = null;
+  else if (btn) { btn.disabled = false; btn.textContent = "Spara"; }
+}
 function setFilter(s) { filterStatus = filterStatus === s ? "Alla" : s; render(); }
 function triggerUpload(id) { document.getElementById("upload-"+id)?.click(); }
-async function handleUpload(containerId, input) {
-  const file = input.files[0];
-  if (!file) return;
-  await uploadFile(containerId, file);
-}
 
 function render() {
-  const q = (document.getElementById("search")?.value || "").toLowerCase();
+  const searchEl = document.getElementById("search");
+  const hadFocus = document.activeElement === searchEl;
+  const selStart = hadFocus ? searchEl.selectionStart : null;
+  const selEnd = hadFocus ? searchEl.selectionEnd : null;
+  const q = searchEl?.value || "";
+  const ql = q.toLowerCase();
   const filtered = rows.filter(r => {
     const ms = filterStatus === "Alla" || r.status === filterStatus;
-    const mq = !q || (r.leverantor||"").toLowerCase().includes(q) || (r.container_nr||"").toLowerCase().includes(q) || (r.bl||"").toLowerCase().includes(q);
+    const mq = !ql || (r.leverantor||"").toLowerCase().includes(ql) || (r.container_nr||"").toLowerCase().includes(ql) || (r.bl||"").toLowerCase().includes(ql);
     return ms && mq;
   });
 
@@ -221,9 +284,10 @@ function render() {
 
   const summaryHTML = STATUSES.map(s => {
     const c = STATUS_CFG[s];
-    return `<div class="summary-card${filterStatus===s?" active":""}" style="--dot:${c.dot};--bg:${c.bg}" onclick="setFilter('${s}')">
-      <div class="num">${counts[s]}</div><div class="lbl">${s}</div></div>`;
-  }).join("") + `<div class="summary-card" style="--dot:#1A2B4A;--bg:#EEF2F7">
+    const active = filterStatus===s;
+    return `<button type="button" class="summary-card${active?" active":""}" style="--dot:${c.dot};--bg:${c.bg}" aria-pressed="${active}" onclick="setFilter('${s}')">
+      <div class="num">${counts[s]}</div><div class="lbl">${s}</div></button>`;
+  }).join("") + `<div class="summary-card" style="--dot:#1A2B4A;--bg:#EEF2F7;cursor:default">
     <div class="num" style="color:#1A2B4A">${rows.length}</div><div class="lbl">Totalt</div></div>`;
 
   const listHTML = filtered.length === 0
@@ -235,20 +299,20 @@ function render() {
         const pcolor = done===4?"#10B981":"#3B82F6";
         const rfiles = files[r.id] || [];
         const filesHTML = rfiles.length
-          ? rfiles.map(f=>`<div class="file-item"><a href="${SUPABASE_URL}/storage/v1/object/public/container-files/${r.id}/${f.name}" target="_blank">📄 ${f.name}</a></div>`).join("")
+          ? rfiles.map(f=>`<div class="file-item"><a href="${SUPABASE_URL}/storage/v1/object/public/container-files/${r.id}/${encodeURIComponent(f.name)}" target="_blank">${ICONS.file} ${esc(f.name)}</a></div>`).join("")
           : `<div style="font-size:12px;color:#9CA3AF">Inga filer uppladdade</div>`;
-        return `<div class="card"><div class="card-body">
+        return `<div class="card" style="--accent:${STATUS_CFG[r.status]?.dot||"#94A3B8"}"><div class="card-body">
           <div class="card-top">
-            <div><div class="card-title">${r.container_nr||"–"} ${badge(r.status)}</div></div>
+            <div><div class="card-title mono">${esc(r.container_nr)||"–"}</div></div>
             <div class="card-actions">
               <button class="btn-edit" data-action="edit" data-id="${r.id}">Redigera</button>
-              <button class="btn-del" data-action="delete" data-id="${r.id}">✕</button>
+              <button class="btn-del" data-action="delete" data-id="${r.id}" aria-label="Ta bort container">✕</button>
             </div>
           </div>
-          <div class="card-meta"><b>${r.leverantor||"–"}</b>${r.bl?" · B/L: "+r.bl:""}</div>
+          <div class="card-meta"><b>${esc(r.leverantor)||"–"}</b>${r.bl?" · B/L: "+esc(r.bl):""} ${badge(r.status)}</div>
           <div class="card-dates">
-            ${r.etd?`<span>📤 ETD: <b>${r.etd}</b></span>`:""}
-            ${r.eta?`<span>📥 ETA: <b>${r.eta}</b></span>`:""}
+            ${r.etd?`<span>${ICONS.depart} ETD: <b class="mono">${esc(r.etd)}</b></span>`:""}
+            ${r.eta?`<span>${ICONS.arrive} ETA: <b class="mono">${esc(r.eta)}</b></span>`:""}
           </div>
           <div class="docs">
             <span>Invoice ${chk(r.invoice)}</span>
@@ -260,9 +324,9 @@ function render() {
             <div class="progress-label">Dokumentstatus ${done}/4</div>
             <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${pcolor}"></div></div>
           </div>
-          ${r.kommentar?`<div class="comment">💬 ${r.kommentar}</div>`:""}
+          ${r.kommentar?`<div class="comment">${ICONS.comment} ${esc(r.kommentar)}</div>`:""}
           <div class="files-section">
-            <div class="files-title">📎 BIFOGADE FILER</div>
+            <div class="files-title">${ICONS.clip} BIFOGADE FILER</div>
             <div class="file-list">${filesHTML}</div>
             <input type="file" class="upload-input" id="upload-${r.id}" data-id="${r.id}">
             <button class="btn-upload" data-action="upload" data-id="${r.id}">+ Ladda upp fil</button>
@@ -273,11 +337,19 @@ function render() {
   app.innerHTML = `
     <div class="summary">${summaryHTML}</div>
     <div class="toolbar">
-      <input type="search" id="search" placeholder="Sök leverantör, container-nr, B/L..." oninput="render()">
-      <button class="btn-add" onclick="showAddForm()">+ Ny</button>
+      <div class="search-wrap">${ICONS.search}<input type="search" id="search" placeholder="Sök leverantör, container-nr, B/L..." value="${esc(q)}" oninput="render()"></div>
+      <button class="btn-add" onclick="showAddForm()">${ICONS.plus}Ny</button>
     </div>
     ${addMode ? formHTML(formObj,"Lägg till container","saveAdd","cancelAdd") : ""}
     ${listHTML}`;
+
+  if (hadFocus) {
+    const newSearchEl = document.getElementById("search");
+    if (newSearchEl) {
+      newSearchEl.focus();
+      newSearchEl.setSelectionRange(selStart, selEnd);
+    }
+  }
 
   filtered.forEach(r => {
     if (r.id !== editId && !files[r.id]) {
@@ -293,7 +365,11 @@ document.addEventListener("click", async function(e) {
   const action = btn.dataset.action;
   const id = btn.dataset.id;
   if (action === "edit") { startEdit(id); }
-  if (action === "delete") { deleteRow(id); }
+  if (action === "delete") {
+    btn.disabled = true;
+    await deleteRow(id);
+    btn.disabled = false;
+  }
   if (action === "upload") { document.getElementById("upload-" + id)?.click(); }
 });
 document.addEventListener("change", async function(e) {
@@ -301,7 +377,10 @@ document.addEventListener("change", async function(e) {
   if (!input) return;
   const id = input.dataset.id;
   const file = input.files[0];
-  if (file && id) await uploadFile(id, file);
+  if (!file || !id) return;
+  const btn = document.querySelector(`[data-action="upload"][data-id="${id}"]`);
+  if (btn) { btn.disabled = true; btn.textContent = "Laddar upp..."; }
+  await uploadFile(id, file);
 });
 init();
 </script>
