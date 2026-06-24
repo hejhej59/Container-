@@ -41,11 +41,15 @@ header p { font-size: 12px; color: #B0BACB; margin-top: 4px; margin-left: 42px; 
 .btn-edit { background: #EEF2F7; border: none; border-radius: 7px; padding: 8px 14px; font-size: 12px; font-weight: 600; cursor: pointer; color: #374151; font-family: inherit; transition: background-color 0.15s; }
 .btn-del { background: #FEE2E2; border: none; border-radius: 7px; padding: 8px 12px; min-width: 40px; font-size: 13px; font-weight: 600; cursor: pointer; color: #DC2626; font-family: inherit; transition: background-color 0.15s; }
 .btn-edit:disabled, .btn-del:disabled, .btn-save:disabled, .btn-upload:disabled { opacity: 0.6; cursor: default; }
-.badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 9px; border-radius: 999px; font-size: 11px; font-weight: 600; }
+.badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 9px; border-radius: 999px; font-size: 11px; font-weight: 600; border: none; font-family: inherit; }
+.badge.clickable { cursor: pointer; }
+.badge.clickable:disabled { opacity: 0.6; cursor: default; }
 .badge .dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
 .card-meta { font-size: 13px; color: #64748B; margin-bottom: 6px; }
-.card-dates { display: flex; gap: 14px; font-size: 12px; color: #6B7280; margin-bottom: 10px; flex-wrap: wrap; }
+.card-dates { display: flex; gap: 14px; font-size: 12px; color: #6B7280; margin-bottom: 10px; flex-wrap: wrap; align-items: center; }
 .card-dates b { color: #374151; }
+.card-dates .overdue, .card-dates .overdue b { color: #DC2626; }
+.overdue-pill { background: #FEE2E2; color: #B91C1C; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 999px; margin-left: 4px; text-transform: uppercase; letter-spacing: 0.03em; }
 .docs { display: flex; gap: 10px; font-size: 12px; color: #6B7280; flex-wrap: wrap; margin-bottom: 8px; }
 .progress-wrap { max-width: 260px; margin-bottom: 8px; }
 .progress-label { font-size: 11px; color: #9CA3AF; margin-bottom: 3px; }
@@ -69,6 +73,10 @@ header p { font-size: 12px; color: #B0BACB; margin-top: 4px; margin-left: 42px; 
 .export-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
 .export-label { font-size: 12px; color: #6B7280; }
 .btn-export { background: #EEF2F7; border: none; border-radius: 7px; padding: 8px 14px; min-height: 36px; font-size: 12px; font-weight: 600; cursor: pointer; color: #374151; font-family: inherit; transition: background-color 0.15s; }
+.sort-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+.sort-label { font-size: 12px; color: #6B7280; }
+.btn-sort { background: #EEF2F7; border: none; border-radius: 7px; padding: 6px 12px; min-height: 32px; font-size: 12px; font-weight: 600; cursor: pointer; color: #374151; font-family: inherit; transition: background-color 0.15s; }
+.btn-sort.active { background: #1A2B4A; color: #fff; }
 .form-panel { background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px; padding: 14px; margin-bottom: 14px; }
 .form-panel h3 { font-weight: 700; font-size: 15px; color: #1E293B; margin-bottom: 12px; }
 .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
@@ -124,6 +132,8 @@ button:focus-visible, .summary-card:focus-visible, input:focus-visible, select:f
   .btn-logout:hover { background: #F1F5F9; }
   .btn-comment:hover { background: #15203A; }
   .btn-export:hover { background: #E2E8F0; }
+  .btn-sort:not(.active):hover { background: #E2E8F0; }
+  .badge.clickable:hover { filter: brightness(0.95); }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -168,6 +178,7 @@ let files = {};
 let comments = {};
 let currentFiltered = [];
 let filterStatus = "All";
+let sortBy = "eta";
 let editId = null;
 let addMode = false;
 let formObj = emptyRow();
@@ -303,11 +314,27 @@ async function addComment(containerId, text) {
   render();
 }
 
-function badge(status) {
+function badge(status, id) {
   const c = STATUS_CFG[status] || STATUS_CFG["Bokad"];
   const label = STATUS_LABELS[status] || status;
-  return `<span class="badge" style="background:${c.bg};color:${c.text}"><span class="dot" style="background:${c.dot}"></span>${esc(label)}</span>`;
+  const dot = `<span class="dot" style="background:${c.dot}"></span>`;
+  if (id == null) {
+    return `<span class="badge" style="background:${c.bg};color:${c.text}">${dot}${esc(label)}</span>`;
+  }
+  return `<button type="button" class="badge clickable" data-action="cycle-status" data-id="${id}" style="background:${c.bg};color:${c.text}" title="Click to advance to next status">${dot}${esc(label)}</button>`;
 }
+function isOverdue(r) {
+  if (!r.eta || r.status === "Levererad") return false;
+  const today = new Date(); today.setHours(0,0,0,0);
+  return new Date(r.eta) < today;
+}
+async function cycleStatus(id) {
+  const row = rows.find(r => String(r.id) === String(id));
+  if (!row) return;
+  const next = STATUSES[(STATUSES.indexOf(row.status) + 1) % STATUSES.length];
+  await saveRow({ ...row, status: next });
+}
+function setSortBy(s) { sortBy = s; render(); }
 function chk(v) { return `<span style="color:${v?"#10B981":"#D1D5DB"};font-size:16px">${v?"✓":"✗"}</span>`; }
 function docsDone(r) { return [r.invoice,r.packing_list,r.bl_dok,r.tull].filter(Boolean).length; }
 function esc(s) { return String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
@@ -468,6 +495,13 @@ function render() {
     const mq = !ql || (r.leverantor||"").toLowerCase().includes(ql) || (r.container_nr||"").toLowerCase().includes(ql) || (r.bl||"").toLowerCase().includes(ql);
     return ms && mq;
   });
+  filtered.sort((a, b) => {
+    if (sortBy !== "eta") return 0;
+    if (!a.eta && !b.eta) return 0;
+    if (!a.eta) return 1;
+    if (!b.eta) return -1;
+    return new Date(a.eta) - new Date(b.eta);
+  });
   currentFiltered = filtered;
 
   const counts = {};
@@ -504,10 +538,10 @@ function render() {
               <button class="btn-del" data-action="delete" data-id="${r.id}" aria-label="Delete container">✕</button>
             </div>
           </div>
-          <div class="card-meta"><b>${esc(r.leverantor)||"–"}</b>${r.bl?" · B/L: "+esc(r.bl):""} ${badge(r.status)}</div>
+          <div class="card-meta"><b>${esc(r.leverantor)||"–"}</b>${r.bl?" · B/L: "+esc(r.bl):""} ${badge(r.status, r.id)}</div>
           <div class="card-dates">
             ${r.etd?`<span>${ICONS.depart} ETD: <b class="mono">${esc(r.etd)}</b></span>`:""}
-            ${r.eta?`<span>${ICONS.arrive} ETA: <b class="mono">${esc(r.eta)}</b></span>`:""}
+            ${r.eta?`<span class="${isOverdue(r)?"overdue":""}">${ICONS.arrive} ETA: <b class="mono">${esc(r.eta)}</b>${isOverdue(r)?'<span class="overdue-pill">Overdue</span>':""}</span>`:""}
           </div>
           <div class="docs">
             <span>Invoice ${chk(r.invoice)}</span>
@@ -545,6 +579,11 @@ function render() {
     <div class="toolbar">
       <div class="search-wrap">${ICONS.search}<input type="search" id="search" placeholder="Search supplier, container no., B/L..." value="${esc(q)}" oninput="render()"></div>
       <button class="btn-add" onclick="showAddForm()">${ICONS.plus}New</button>
+    </div>
+    <div class="sort-bar">
+      <span class="sort-label">Sort:</span>
+      <button class="btn-sort${sortBy==="eta"?" active":""}" onclick="setSortBy('eta')">Soonest ETA</button>
+      <button class="btn-sort${sortBy==="created"?" active":""}" onclick="setSortBy('created')">Recently added</button>
     </div>
     <div class="export-bar">
       <span class="export-label">Export current view (${filtered.length}):</span>
@@ -594,6 +633,10 @@ document.addEventListener("click", async function(e) {
   }
   if (action === "upload") { document.getElementById("upload-" + id)?.click(); }
   if (action === "comment") { submitComment(id); }
+  if (action === "cycle-status") {
+    btn.disabled = true;
+    await cycleStatus(id);
+  }
 });
 document.addEventListener("keydown", function(e) {
   if (e.key !== "Enter") return;
