@@ -540,8 +540,8 @@ function render() {
           </div>
           <div class="card-meta"><b>${esc(r.leverantor)||"–"}</b>${r.bl?" · B/L: "+esc(r.bl):""} ${badge(r.status, r.id)}</div>
           <div class="card-dates">
-            ${r.etd?`<span>${ICONS.depart} ETD: <b class="mono">${esc(r.etd)}</b></span>`:""}
-            ${r.eta?`<span class="${isOverdue(r)?"overdue":""}">${ICONS.arrive} ETA: <b class="mono">${esc(r.eta)}</b>${isOverdue(r)?'<span class="overdue-pill">Overdue</span>':""}</span>`:""}
+            <span>${ICONS.depart} ETD: <b class="mono">${r.etd?esc(r.etd):"–"}</b></span>
+            <span class="${isOverdue(r)?"overdue":""}">${ICONS.arrive} ETA: <b class="mono">${r.eta?esc(r.eta):"–"}</b>${isOverdue(r)?'<span class="overdue-pill">Overdue</span>':""}</span>
           </div>
           <div class="docs">
             <span>Invoice ${chk(r.invoice)}</span>
