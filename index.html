@@ -197,7 +197,7 @@ function formHTML(obj, title, saveF, cancelF) {
 function showAddForm() { addMode = true; formObj = emptyRow(); render(); }
 function cancelAdd() { addMode = false; render(); }
 async function saveAdd() { const d = readForm(); await saveRow(d); addMode = false; }
-function startEdit(id) { editId = id; formObj = rows.find(r => r.id === id); render(); }
+function startEdit(id) { console.log("startEdit id:", id, "rows:", rows.map(r=>r.id)); editId = id; formObj = rows.find(r => String(r.id) === String(id)); console.log("formObj:", formObj); render(); }
 function cancelEdit() { editId = null; render(); }
 async function saveEdit() { const d = readForm(); await saveRow({ ...formObj, ...d }); editId = null; }
 function setFilter(s) { filterStatus = filterStatus === s ? "Alla" : s; render(); }
@@ -229,7 +229,7 @@ function render() {
   const listHTML = filtered.length === 0
     ? `<div class="empty">Inga containers ännu – tryck + Ny för att lägga till!</div>`
     : filtered.map(r => {
-        if (r.id === editId) return `<div class="card"><div class="card-body">${formHTML(r,"Redigera container","saveEdit","cancelEdit")}</div></div>`;
+        if (String(r.id) === String(editId)) return `<div class="card"><div class="card-body">${formHTML(r,"Redigera container","saveEdit","cancelEdit")}</div></div>`;
         const done = docsDone(r);
         const pct = (done/4)*100;
         const pcolor = done===4?"#10B981":"#3B82F6";
