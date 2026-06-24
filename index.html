@@ -66,6 +66,9 @@ header p { font-size: 12px; color: #B0BACB; margin-top: 4px; margin-left: 42px; 
 .comment-add { display: flex; gap: 6px; }
 .comment-add input { flex: 1; border: 1px solid #D1D5DB; border-radius: 6px; padding: 9px 10px; font-size: 16px; font-family: inherit; outline: none; min-width: 0; }
 .btn-comment { background: #1A2B4A; color: #fff; border: none; border-radius: 6px; padding: 8px 14px; min-height: 40px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; transition: background-color 0.15s; }
+.export-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+.export-label { font-size: 12px; color: #6B7280; }
+.btn-export { background: #EEF2F7; border: none; border-radius: 7px; padding: 8px 14px; min-height: 36px; font-size: 12px; font-weight: 600; cursor: pointer; color: #374151; font-family: inherit; transition: background-color 0.15s; }
 .form-panel { background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px; padding: 14px; margin-bottom: 14px; }
 .form-panel h3 { font-weight: 700; font-size: 15px; color: #1E293B; margin-bottom: 12px; }
 .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
@@ -120,6 +123,7 @@ button:focus-visible, .summary-card:focus-visible, input:focus-visible, select:f
   .btn-login:hover { background: #15203A; }
   .btn-logout:hover { background: #F1F5F9; }
   .btn-comment:hover { background: #15203A; }
+  .btn-export:hover { background: #E2E8F0; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -162,6 +166,7 @@ const STATUSES = Object.keys(STATUS_CFG);
 let rows = [];
 let files = {};
 let comments = {};
+let currentFiltered = [];
 let filterStatus = "All";
 let editId = null;
 let addMode = false;
@@ -381,6 +386,76 @@ async function saveEdit() {
 function setFilter(s) { filterStatus = filterStatus === s ? "All" : s; render(); }
 function triggerUpload(id) { document.getElementById("upload-"+id)?.click(); }
 
+function csvEscape(v) {
+  const s = String(v ?? "");
+  return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+}
+
+function exportCSV() {
+  const headers = ["Container No.","Supplier","B/L No.","Status","ETD","ETA","Invoice","Packing List","B/L Doc","Customs Cleared","Delivered"];
+  const lines = [headers.map(csvEscape).join(",")];
+  currentFiltered.forEach(r => {
+    lines.push([
+      r.container_nr || "",
+      r.leverantor || "",
+      r.bl || "",
+      STATUS_LABELS[r.status] || r.status || "",
+      r.etd || "",
+      r.eta || "",
+      r.invoice ? "Yes" : "No",
+      r.packing_list ? "Yes" : "No",
+      r.bl_dok ? "Yes" : "No",
+      r.tull ? "Yes" : "No",
+      r.levererad ? "Yes" : "No",
+    ].map(csvEscape).join(","));
+  });
+  const csv = "\uFEFF" + lines.join("\r\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `containers-${new Date().toISOString().slice(0,10)}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function exportPDF() {
+  const rowsHTML = currentFiltered.map(r => `
+    <tr>
+      <td>${esc(r.container_nr)||"-"}</td>
+      <td>${esc(r.leverantor)||"-"}</td>
+      <td>${esc(r.bl)||"-"}</td>
+      <td>${esc(STATUS_LABELS[r.status]||r.status)||"-"}</td>
+      <td>${esc(r.etd)||"-"}</td>
+      <td>${esc(r.eta)||"-"}</td>
+      <td>${docsDone(r)}/4</td>
+    </tr>`).join("");
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Container Status Report</title>
+  <style>
+    body { font-family: Arial, Helvetica, sans-serif; padding: 24px; color: #1E293B; }
+    h1 { font-size: 18px; margin-bottom: 2px; }
+    .meta { font-size: 12px; color: #6B7280; margin-bottom: 20px; }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    th, td { border: 1px solid #D1D5DB; padding: 6px 8px; text-align: left; }
+    th { background: #F1F5F9; }
+  </style></head><body>
+  <h1>Container Status Report</h1>
+  <div class="meta">Generated ${esc(new Date().toLocaleString())} · ${currentFiltered.length} container(s)</div>
+  <table>
+    <thead><tr><th>Container No.</th><th>Supplier</th><th>B/L No.</th><th>Status</th><th>ETD</th><th>ETA</th><th>Docs</th></tr></thead>
+    <tbody>${rowsHTML}</tbody>
+  </table>
+  </body></html>`;
+  const w = window.open("", "_blank");
+  if (!w) { alert("Please allow pop-ups to export a PDF."); return; }
+  w.document.open();
+  w.document.write(html);
+  w.document.close();
+  setTimeout(() => { w.focus(); w.print(); }, 300);
+}
+
 function render() {
   const searchEl = document.getElementById("search");
   const hadFocus = document.activeElement === searchEl;
@@ -393,6 +468,7 @@ function render() {
     const mq = !ql || (r.leverantor||"").toLowerCase().includes(ql) || (r.container_nr||"").toLowerCase().includes(ql) || (r.bl||"").toLowerCase().includes(ql);
     return ms && mq;
   });
+  currentFiltered = filtered;
 
   const counts = {};
   STATUSES.forEach(s => counts[s] = rows.filter(r => r.status === s).length);
@@ -469,6 +545,11 @@ function render() {
     <div class="toolbar">
       <div class="search-wrap">${ICONS.search}<input type="search" id="search" placeholder="Search supplier, container no., B/L..." value="${esc(q)}" oninput="render()"></div>
       <button class="btn-add" onclick="showAddForm()">${ICONS.plus}New</button>
+    </div>
+    <div class="export-bar">
+      <span class="export-label">Export current view (${filtered.length}):</span>
+      <button class="btn-export" onclick="exportCSV()">Excel (CSV)</button>
+      <button class="btn-export" onclick="exportPDF()">PDF</button>
     </div>
     ${addMode ? formHTML(formObj,"Add container","saveAdd","cancelAdd") : ""}
     ${listHTML}`;
