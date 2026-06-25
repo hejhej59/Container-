@@ -189,7 +189,7 @@ let loginMode = "login";
 const app = document.getElementById("app");
 
 function emptyRow() {
-  return { leverantor:"", container_nr:"", bl:"", etd:"", eta:"", status:"Bokad", invoice:false, packing_list:false, bl_dok:false, tull:false, levererad:false };
+  return { leverantor:"", container_nr:"", bl:"", goods_description:"", etd:"", eta:"", status:"Bokad", invoice:false, packing_list:false, bl_dok:false, tull:false, levererad:false };
 }
 
 async function init() {
@@ -359,6 +359,7 @@ function readForm() {
     leverantor: document.getElementById("f-lev").value,
     container_nr: document.getElementById("f-cnr").value,
     bl: document.getElementById("f-bl").value,
+    goods_description: document.getElementById("f-goods").value,
     etd: document.getElementById("f-etd").value || null,
     eta: document.getElementById("f-eta").value || null,
     status: document.getElementById("f-status").value,
@@ -377,6 +378,7 @@ function formHTML(obj, title, saveF, cancelF) {
       <div class="form-field full"><label for="f-lev">SUPPLIER</label><input id="f-lev" value="${esc(obj.leverantor)}"></div>
       <div class="form-field"><label for="f-cnr">CONTAINER NO.</label><input id="f-cnr" value="${esc(obj.container_nr)}"></div>
       <div class="form-field"><label for="f-bl">B/L NO.</label><input id="f-bl" value="${esc(obj.bl)}"></div>
+      <div class="form-field full"><label for="f-goods">GOODS DESCRIPTION</label><input id="f-goods" value="${esc(obj.goods_description)}"></div>
       <div class="form-field"><label for="f-etd">ETD (DEPARTURE)</label><input type="date" id="f-etd" value="${esc(obj.etd)}"></div>
       <div class="form-field"><label for="f-eta">ETA (ARRIVAL)</label><input type="date" id="f-eta" value="${esc(obj.eta)}"></div>
       <div class="form-field full"><label for="f-status">STATUS</label><select id="f-status">${STATUSES.map(s=>`<option value="${esc(s)}"${s===obj.status?" selected":""}>${esc(STATUS_LABELS[s]||s)}</option>`).join("")}</select></div>
@@ -424,13 +426,14 @@ function csvEscape(v) {
 }
 
 function exportCSV() {
-  const headers = ["Container No.","Supplier","B/L No.","Status","ETD","ETA","Invoice","Packing List","B/L Doc","Customs Cleared","Delivered"];
+  const headers = ["Container No.","Supplier","B/L No.","Goods Description","Status","ETD","ETA","Invoice","Packing List","B/L Doc","Customs Cleared","Delivered"];
   const lines = [headers.map(csvEscape).join(",")];
   currentFiltered.forEach(r => {
     lines.push([
       r.container_nr || "",
       r.leverantor || "",
       r.bl || "",
+      r.goods_description || "",
       STATUS_LABELS[r.status] || r.status || "",
       r.etd || "",
       r.eta || "",
@@ -459,6 +462,7 @@ function exportPDF() {
       <td>${esc(r.container_nr)||"-"}</td>
       <td>${esc(r.leverantor)||"-"}</td>
       <td>${esc(r.bl)||"-"}</td>
+      <td>${esc(r.goods_description)||"-"}</td>
       <td>${esc(STATUS_LABELS[r.status]||r.status)||"-"}</td>
       <td>${esc(r.etd)||"-"}</td>
       <td>${esc(r.eta)||"-"}</td>
@@ -476,7 +480,7 @@ function exportPDF() {
   <h1>Container Status Report</h1>
   <div class="meta">Generated ${esc(new Date().toLocaleString())} · ${currentFiltered.length} container(s)</div>
   <table>
-    <thead><tr><th>Container No.</th><th>Supplier</th><th>B/L No.</th><th>Status</th><th>ETD</th><th>ETA</th><th>Docs</th></tr></thead>
+    <thead><tr><th>Container No.</th><th>Supplier</th><th>B/L No.</th><th>Goods Description</th><th>Status</th><th>ETD</th><th>ETA</th><th>Docs</th></tr></thead>
     <tbody>${rowsHTML}</tbody>
   </table>
   </body></html>`;
@@ -544,6 +548,7 @@ function render() {
             </div>
           </div>
           <div class="card-meta"><b>${esc(r.leverantor)||"–"}</b>${r.bl?" · B/L: "+esc(r.bl):""} ${badge(r.status, r.id)}</div>
+          ${r.goods_description?`<div class="card-meta">${esc(r.goods_description)}</div>`:""}
           <div class="card-dates">
             <span>${ICONS.depart} ETD: <b class="mono">${r.etd?esc(r.etd):"–"}</b></span>
             <span class="${isOverdue(r)?"overdue":""}">${ICONS.arrive} ETA: <b class="mono">${r.eta?esc(r.eta):"–"}</b>${isOverdue(r)?'<span class="overdue-pill">Overdue</span>':""}</span>
