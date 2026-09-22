@@ -296,12 +296,23 @@ async function deleteRow(id) {
 
 async function uploadFiles(containerId, fileList) {
   const failed = [];
+  const uploaded = [];
   for (const file of Array.from(fileList)) {
     const path = `${containerId}/${Date.now()}_${file.name}`;
     const { error } = await sb.storage.from("container-files").upload(path, file);
     if (error) failed.push(`${file.name}: ${error.message}`);
+    else uploaded.push(file.name);
   }
   if (failed.length) alert("Could not upload:\n" + failed.join("\n"));
+  if (uploaded.length) {
+    const row = rows.find(r => String(r.id) === String(containerId));
+    const containerName = row
+      ? `${row.leverantor}${row.container_nr ? " — " + row.container_nr : ""}`
+      : String(containerId);
+    sb.functions.invoke("notify-upload", {
+      body: { containerName, fileNames: uploaded, uploadedBy: currentUser?.email || "Unknown" }
+    }).catch(() => {});
+  }
   await loadFiles(containerId);
   render();
 }
@@ -611,14 +622,17 @@ function render() {
     }
   }
 
-  filtered.forEach(r => {
-    if (r.id !== editId && !files[r.id]) {
-      loadFiles(r.id).then(() => render());
-    }
-    if (r.id !== editId && !comments[r.id]) {
-      loadComments(r.id).then(() => render());
-    }
-  });
+  const missing = filtered.filter(r => r.id !== editId && (!files[r.id] || !comments[r.id]));
+  if (missing.length) {
+    (async () => {
+      for (const r of missing) {
+        let changed = false;
+        if (!files[r.id]) { await loadFiles(r.id); changed = true; }
+        if (!comments[r.id]) { await loadComments(r.id); changed = true; }
+        if (changed) render();
+      }
+    })();
+  }
 }
 
 function submitComment(id) {
