@@ -266,10 +266,18 @@ async function loadData() {
 async function loadFiles(containerId) {
   try {
     const { data } = await sb.storage.from("container-files").list(containerId + "/");
-    const list = data || [];
+    const list = (data || []).filter(f => f.name !== ".emptyFolderPlaceholder");
     if (list.length) {
-      const { data: signedList } = await sb.storage.from("container-files").createSignedUrls(list.map(f => `${containerId}/${f.name}`), 3600);
-      list.forEach((f, i) => { f.url = signedList?.[i]?.signedUrl || null; });
+      const paths = list.map(f => `${containerId}/${f.name}`);
+      const { data: signedList, error: signErr } = await sb.storage.from("container-files").createSignedUrls(paths, 86400);
+      if (signErr || !signedList) {
+        for (const f of list) {
+          const { data: sd } = await sb.storage.from("container-files").createSignedUrl(`${containerId}/${f.name}`, 86400);
+          f.url = sd?.signedUrl || null;
+        }
+      } else {
+        list.forEach((f, i) => { f.url = signedList[i]?.signedUrl || null; });
+      }
     }
     files[containerId] = list;
   } catch(e) { files[containerId] = []; }
@@ -544,7 +552,7 @@ function render() {
         const pcolor = done===4?"#10B981":"#3B82F6";
         const rfiles = files[r.id] || [];
         const filesHTML = rfiles.length
-          ? rfiles.map(f=>`<div class="file-item"><a href="${f.url||"#"}" target="_blank">${ICONS.file} ${esc(f.name)}</a></div>`).join("")
+          ? rfiles.map(f=>f.url?`<div class="file-item"><a href="${f.url}" target="_blank">${ICONS.file} ${esc(f.name)}</a></div>`:`<div class="file-item" style="opacity:.5">${ICONS.file} ${esc(f.name)} (loading…)</div>`).join("")
           : `<div style="font-size:12px;color:#9CA3AF">No files uploaded</div>`;
         const rcomments = comments[r.id] || [];
         const commentsHTML = rcomments.length
