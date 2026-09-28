@@ -254,6 +254,7 @@ async function logout() {
 
 async function showApp() {
   app.innerHTML = `<div class="loading"><div class="spinner"></div></div>`;
+  hydrateFileCache();
   await loadData();
   render();
 }
@@ -330,43 +331,106 @@ async function loadComments(containerId) {
   comments[containerId] = !error && data ? data : [];
 }
 
-let loadingBatch = false;
+const FCACHE = "cf_filecache_v1";
+const FCACHE_TTL = 20 * 3600 * 1000;
 
-async function loadMissing(list) {
-  if (loadingBatch) return;
-  loadingBatch = true;
+function hydrateFileCache() {
   try {
-    const needComments = list.filter(r => !comments[r.id]);
-    if (needComments.length) {
-      const ids = needComments.map(r => r.id);
-      const { data, error } = await sb.from("container_comments")
-        .select("*").in("container_id", ids).order("created_at", { ascending: false });
-      needComments.forEach(r => comments[r.id] = []);
+    const c = JSON.parse(localStorage.getItem(FCACHE) || "{}");
+    const now = Date.now();
+    for (const id in c) if (now - c[id].at < FCACHE_TTL) files[id] = c[id].files;
+  } catch {}
+}
+
+function persistFileCache(ids) {
+  try {
+    const c = JSON.parse(localStorage.getItem(FCACHE) || "{}");
+    const now = Date.now();
+    ids.forEach(id => { c[id] = { at: now, files: files[id] || [] }; });
+    localStorage.setItem(FCACHE, JSON.stringify(c));
+  } catch {}
+}
+
+async function retry429(fn, tries = 4) {
+  let last;
+  for (let i = 0; i < tries; i++) {
+    last = await fn();
+    const m = String(last?.error?.message || "");
+    if (!last?.error || !/too many|slow ?down|429|connection/i.test(m)) return last;
+    await new Promise(r => setTimeout(r, 900 * 2 ** i));
+  }
+  return last;
+}
+
+let loadingBatch = false, flushTimer = null;
+const pendingIds = new Set();
+
+function queueLoad(id) {
+  if (files[id] && comments[id]) return;
+  pendingIds.add(String(id));
+  clearTimeout(flushTimer);
+  flushTimer = setTimeout(flushQueue, 200);
+}
+
+async function flushQueue() {
+  if (loadingBatch || !pendingIds.size) return;
+  loadingBatch = true;
+  const ids = [...pendingIds];
+  pendingIds.clear();
+  const byId = {};
+  rows.forEach(r => byId[String(r.id)] = r.id);
+  try {
+    const needC = ids.filter(id => !comments[id]);
+    if (needC.length) {
+      const { data, error } = await retry429(() => sb.from("container_comments")
+        .select("*").in("container_id", needC.map(i => byId[i] ?? i))
+        .order("created_at", { ascending: false }));
+      needC.forEach(id => comments[id] = []);
       if (!error && data) data.forEach(c => (comments[c.container_id] ||= []).push(c));
     }
 
-    const needFiles = list.filter(r => !files[r.id]);
-    for (let i = 0; i < needFiles.length; i += 4) {
-      const chunk = needFiles.slice(i, i + 4);
-      await Promise.all(chunk.map(async r => {
-        const { data } = await sb.storage.from("container-files").list(r.id + "/");
-        files[r.id] = (data || []).filter(f => f.name !== ".emptyFolderPlaceholder");
+    const needF = ids.filter(id => !files[id]);
+    for (let i = 0; i < needF.length; i += 3) {
+      await Promise.all(needF.slice(i, i + 3).map(async id => {
+        const { data } = await retry429(() => sb.storage.from("container-files").list(id + "/"));
+        files[id] = (data || []).filter(f => f.name !== ".emptyFolderPlaceholder");
       }));
     }
 
-    const allPaths = [], allFiles = [];
-    needFiles.forEach(r => (files[r.id] || []).forEach(f => {
-      allPaths.push(`${r.id}/${f.name}`); allFiles.push(f);
-    }));
-    if (allPaths.length) {
-      const { data: signed } = await sb.storage.from("container-files").createSignedUrls(allPaths, 86400);
-      if (signed) allFiles.forEach((f, i) => { f.url = signed[i]?.signedUrl || null; });
+    const paths = [], objs = [];
+    needF.forEach(id => (files[id] || []).forEach(f => { paths.push(`${id}/${f.name}`); objs.push(f); }));
+    for (let i = 0; i < paths.length; i += 40) {
+      const { data: signed } = await retry429(() => sb.storage.from("container-files")
+        .createSignedUrls(paths.slice(i, i + 40), 86400));
+      if (signed) signed.forEach((s, j) => { if (objs[i + j]) objs[i + j].url = s?.signedUrl || null; });
     }
+    if (needF.length) persistFileCache(needF);
   } catch (e) {
-    list.forEach(r => { files[r.id] ||= []; comments[r.id] ||= []; });
+    ids.forEach(id => { files[id] ||= []; comments[id] ||= []; });
   }
   loadingBatch = false;
   render();
+  if (pendingIds.size) { clearTimeout(flushTimer); flushTimer = setTimeout(flushQueue, 200); }
+}
+
+let cardObserver = null;
+function observeCards() {
+  if (!("IntersectionObserver" in window)) {
+    currentFiltered.forEach(r => queueLoad(r.id));
+    return;
+  }
+  cardObserver?.disconnect();
+  cardObserver = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (!e.isIntersecting) return;
+      cardObserver.unobserve(e.target);
+      queueLoad(e.target.dataset.cid);
+    });
+  }, { rootMargin: "400px" });
+  document.querySelectorAll(".card[data-cid]").forEach(el => {
+    const id = el.dataset.cid;
+    if (!files[id] || !comments[id]) cardObserver.observe(el);
+  });
 }
 
 async function addComment(containerId, text) {
@@ -597,7 +661,7 @@ function render() {
         const commentsHTML = rcomments.length
           ? rcomments.map(c=>`<div class="comment-item">${esc(c.body)}<div class="comment-meta">${esc(c.author||"Unknown")} · ${new Date(c.created_at).toLocaleString()}</div></div>`).join("")
           : `<div style="font-size:12px;color:#9CA3AF">No comments yet</div>`;
-        return `<div class="card" style="--accent:${STATUS_CFG[r.status]?.dot||"#94A3B8"}"><div class="card-body">
+        return `<div class="card" data-cid="${r.id}" style="--accent:${STATUS_CFG[r.status]?.dot||"#94A3B8"}"><div class="card-body">
           <div class="card-top">
             <div><div class="card-title mono">${esc(r.container_nr)||"–"}</div></div>
             <div class="card-actions">
@@ -669,8 +733,7 @@ function render() {
     }
   }
 
-  const missing = filtered.filter(r => r.id !== editId && (!files[r.id] || !comments[r.id]));
-  if (missing.length) loadMissing(missing);
+  observeCards();
 }
 
 function submitComment(id) {
