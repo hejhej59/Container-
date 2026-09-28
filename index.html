@@ -330,6 +330,45 @@ async function loadComments(containerId) {
   comments[containerId] = !error && data ? data : [];
 }
 
+let loadingBatch = false;
+
+async function loadMissing(list) {
+  if (loadingBatch) return;
+  loadingBatch = true;
+  try {
+    const needComments = list.filter(r => !comments[r.id]);
+    if (needComments.length) {
+      const ids = needComments.map(r => r.id);
+      const { data, error } = await sb.from("container_comments")
+        .select("*").in("container_id", ids).order("created_at", { ascending: false });
+      needComments.forEach(r => comments[r.id] = []);
+      if (!error && data) data.forEach(c => (comments[c.container_id] ||= []).push(c));
+    }
+
+    const needFiles = list.filter(r => !files[r.id]);
+    for (let i = 0; i < needFiles.length; i += 4) {
+      const chunk = needFiles.slice(i, i + 4);
+      await Promise.all(chunk.map(async r => {
+        const { data } = await sb.storage.from("container-files").list(r.id + "/");
+        files[r.id] = (data || []).filter(f => f.name !== ".emptyFolderPlaceholder");
+      }));
+    }
+
+    const allPaths = [], allFiles = [];
+    needFiles.forEach(r => (files[r.id] || []).forEach(f => {
+      allPaths.push(`${r.id}/${f.name}`); allFiles.push(f);
+    }));
+    if (allPaths.length) {
+      const { data: signed } = await sb.storage.from("container-files").createSignedUrls(allPaths, 86400);
+      if (signed) allFiles.forEach((f, i) => { f.url = signed[i]?.signedUrl || null; });
+    }
+  } catch (e) {
+    list.forEach(r => { files[r.id] ||= []; comments[r.id] ||= []; });
+  }
+  loadingBatch = false;
+  render();
+}
+
 async function addComment(containerId, text) {
   if (!text.trim()) return;
   const { error } = await sb.from("container_comments").insert([{ container_id: containerId, body: text.trim(), author: currentUser?.email || null }]);
@@ -552,7 +591,7 @@ function render() {
         const pcolor = done===4?"#10B981":"#3B82F6";
         const rfiles = files[r.id] || [];
         const filesHTML = rfiles.length
-          ? rfiles.map(f=>f.url?`<div class="file-item"><a href="${f.url}" target="_blank">${ICONS.file} ${esc(f.name)}</a></div>`:`<div class="file-item" style="opacity:.5">${ICONS.file} ${esc(f.name)} (loading…)</div>`).join("")
+          ? rfiles.map(f=>f.url?`<div class="file-item" style="display:flex;align-items:center;gap:8px"><a href="${f.url}" target="_blank" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${ICONS.file} ${esc(f.name)}</a><a href="${f.url}&download=${encodeURIComponent(f.name)}" title="Download" style="flex-shrink:0;text-decoration:none;font-size:14px;padding:2px 6px;border-radius:4px;background:#EEF2F7;color:#1A2B4A">⬇</a></div>`:`<div class="file-item" style="opacity:.5">${ICONS.file} ${esc(f.name)} (loading…)</div>`).join("")
           : `<div style="font-size:12px;color:#9CA3AF">No files uploaded</div>`;
         const rcomments = comments[r.id] || [];
         const commentsHTML = rcomments.length
@@ -631,16 +670,7 @@ function render() {
   }
 
   const missing = filtered.filter(r => r.id !== editId && (!files[r.id] || !comments[r.id]));
-  if (missing.length) {
-    (async () => {
-      for (const r of missing) {
-        let changed = false;
-        if (!files[r.id]) { await loadFiles(r.id); changed = true; }
-        if (!comments[r.id]) { await loadComments(r.id); changed = true; }
-        if (changed) render();
-      }
-    })();
-  }
+  if (missing.length) loadMissing(missing);
 }
 
 function submitComment(id) {
